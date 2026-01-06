@@ -1,16 +1,24 @@
-import * as cdk from 'aws-cdk-lib/core';
-import { Construct } from 'constructs';
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as cdk from "aws-cdk-lib/core";
+import { Construct } from "constructs";
+import { VpcConstruct } from "./construct/vpc-construct";
+import { AlbConstruct } from "./construct/alb-construct";
+import { EcsConstruct } from "./construct/ecs-construct";
 
 export class EcsNativeBlueGreenStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // The code that defines your stack goes here
-
-    // example resource
-    // const queue = new sqs.Queue(this, 'EcsNativeBlueGreenQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
+    const vpcConstruct = new VpcConstruct(this, "VpcConstruct");
+    const albConstruct = new AlbConstruct(this, "AlbConstruct", {
+      vpc: vpcConstruct.vpc,
+    });
+    const ecsConstruct = new EcsConstruct(this, "EcsConstruct", {
+      vpc: vpcConstruct.vpc,
+      alb: albConstruct.alb,
+      tg1: albConstruct.tg1,
+      tg2: albConstruct.tg2,
+      listenerRule: albConstruct.listenerRule,
+      testListenerRule: albConstruct.testListenerRule,
+    });
   }
 }
