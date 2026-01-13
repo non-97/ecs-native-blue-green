@@ -43,7 +43,11 @@ export class AlbConstruct extends Construct {
           path: "/",
           port: "80",
           protocol: cdk.aws_elasticloadbalancingv2.Protocol.HTTP,
+          healthyThresholdCount: 2,
+          interval: cdk.Duration.seconds(5),
+          timeout: cdk.Duration.seconds(3),
         },
+        deregistrationDelay: cdk.Duration.seconds(5),
       }
     );
     this.tg1 = tg1;
@@ -59,7 +63,11 @@ export class AlbConstruct extends Construct {
           path: "/",
           port: "80",
           protocol: cdk.aws_elasticloadbalancingv2.Protocol.HTTP,
+          healthyThresholdCount: 2,
+          interval: cdk.Duration.seconds(5),
+          timeout: cdk.Duration.seconds(3),
         },
+        deregistrationDelay: cdk.Duration.seconds(5),
       }
     );
     this.tg2 = tg2;

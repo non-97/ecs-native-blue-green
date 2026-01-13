@@ -2,6 +2,7 @@ import * as cdk from "aws-cdk-lib/core";
 import { Construct } from "constructs";
 import { VpcConstruct } from "./construct/vpc-construct";
 import { AlbConstruct } from "./construct/alb-construct";
+import { FirelensConstruct } from "./construct/firelens-construct";
 import { EcsConstruct } from "./construct/ecs-construct";
 
 export class EcsNativeBlueGreenStack extends cdk.Stack {
@@ -12,6 +13,7 @@ export class EcsNativeBlueGreenStack extends cdk.Stack {
     const albConstruct = new AlbConstruct(this, "AlbConstruct", {
       vpc: vpcConstruct.vpc,
     });
+    const firelensConstruct = new FirelensConstruct(this, "FirelensConstruct");
     const ecsConstruct = new EcsConstruct(this, "EcsConstruct", {
       vpc: vpcConstruct.vpc,
       alb: albConstruct.alb,
@@ -19,6 +21,11 @@ export class EcsNativeBlueGreenStack extends cdk.Stack {
       tg2: albConstruct.tg2,
       listenerRule: albConstruct.listenerRule,
       testListenerRule: albConstruct.testListenerRule,
+      firelens: {
+        deliveryStream: firelensConstruct.deliveryStream,
+        logGroup: firelensConstruct.firelensLogGroup,
+        confBucket: firelensConstruct.firelensConfBucket,
+      },
     });
   }
 }

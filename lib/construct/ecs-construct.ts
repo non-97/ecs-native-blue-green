@@ -9,12 +9,16 @@ export interface EcsConstructProps {
   tg1: cdk.aws_elasticloadbalancingv2.IApplicationTargetGroup;
   listenerRule: cdk.aws_elasticloadbalancingv2.ApplicationListenerRule;
   testListenerRule: cdk.aws_elasticloadbalancingv2.ApplicationListenerRule;
+  firelens?: {
+    deliveryStream: cdk.aws_kinesisfirehose.IDeliveryStream;
+    logGroup: cdk.aws_logs.ILogGroup;
+    confBucket: cdk.aws_s3.IBucket;
+  };
 }
 
 export class EcsConstruct extends Construct {
   constructor(scope: Construct, id: string, props: EcsConstructProps) {
     super(scope, id);
-    const containerName = "Main";
 
     // VPC
     const vpc = props.vpc;
@@ -22,17 +26,8 @@ export class EcsConstruct extends Construct {
     // ECS Cluster
     const cluster = new cdk.aws_ecs.Cluster(this, "Cluster", {
       vpc,
+      containerInsightsV2: cdk.aws_ecs.ContainerInsights.ENHANCED,
     });
-
-    // // Task Execution Role
-    // const executionRole = new cdk.aws_iam.Role(this, "TaskExecutionRole", {
-    //   assumedBy: new cdk.aws_iam.ServicePrincipal("ecs-tasks.amazonaws.com"),
-    //   managedPolicies: [
-    //     cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName(
-    //       "service-role/AmazonECSTaskExecutionRolePolicy"
-    //     ),
-    //   ],
-    // });
 
     // Task Definition
     const taskDefinition = new cdk.aws_ecs.FargateTaskDefinition(
@@ -49,17 +44,92 @@ export class EcsConstruct extends Construct {
     );
 
     // Container
-    taskDefinition.addContainer("Container", {
-      containerName,
+    const webContainer = taskDefinition.addContainer("WebContainer", {
+      containerName: "web",
       image: cdk.aws_ecs.ContainerImage.fromAsset(
-        path.join(__dirname, `../../container/${containerName}`),
+        path.join(__dirname, "../../src/container/web"),
         {
           platform: cdk.aws_ecr_assets.Platform.LINUX_ARM64,
         }
       ),
       essential: true,
       portMappings: [{ containerPort: 80 }],
+      linuxParameters: new cdk.aws_ecs.LinuxParameters(
+        this,
+        "WebLinuxParameters",
+        {
+          initProcessEnabled: true,
+        }
+      ),
+      logging: props.firelens
+        ? cdk.aws_ecs.LogDrivers.firelens({})
+        : cdk.aws_ecs.LogDrivers.awsLogs({
+            streamPrefix: "web",
+          }),
     });
+
+    const appContainer = taskDefinition.addContainer("AppContainer", {
+      containerName: "app",
+      image: cdk.aws_ecs.ContainerImage.fromAsset(
+        path.join(__dirname, "../../src/container/app"),
+        {
+          platform: cdk.aws_ecr_assets.Platform.LINUX_ARM64,
+        }
+      ),
+      essential: true,
+      healthCheck: {
+        command: [
+          "CMD-SHELL",
+          "wget -q  -O - http://localhost:3000/health || exit 1",
+        ],
+        interval: cdk.Duration.seconds(10),
+        timeout: cdk.Duration.seconds(3),
+        retries: 3,
+        startPeriod: cdk.Duration.seconds(5),
+      },
+      linuxParameters: new cdk.aws_ecs.LinuxParameters(
+        this,
+        "AppLinuxParameters",
+        {
+          initProcessEnabled: true,
+        }
+      ),
+      logging: props.firelens
+        ? cdk.aws_ecs.LogDrivers.firelens({})
+        : cdk.aws_ecs.LogDrivers.awsLogs({
+            streamPrefix: "app",
+          }),
+    });
+
+    webContainer.addContainerDependencies({
+      container: appContainer,
+      condition: cdk.aws_ecs.ContainerDependencyCondition.HEALTHY,
+    });
+
+    if (props.firelens) {
+      taskDefinition.addFirelensLogRouter("logRouter", {
+        image: cdk.aws_ecs.ContainerImage.fromRegistry(
+          "public.ecr.aws/aws-observability/aws-for-fluent-bit:init-3.1.1"
+        ),
+        essential: true,
+        logging: cdk.aws_ecs.LogDrivers.awsLogs({
+          streamPrefix: `firelens/${taskDefinition.family}`,
+        }),
+        firelensConfig: {
+          type: cdk.aws_ecs.FirelensLogRouterType.FLUENTBIT,
+        },
+        environment: {
+          LOG_GROUP_NAME: props.firelens.logGroup.logGroupName,
+          FIREHOSE_DELIVERY_STREAM_NAME:
+            props.firelens.deliveryStream.deliveryStreamName,
+          aws_fluent_bit_init_s3_1: `${props.firelens.confBucket.bucketArn}/extra.conf`,
+          aws_fluent_bit_init_s3_2: `${props.firelens.confBucket.bucketArn}/parsers_custom.conf`,
+        },
+      });
+      props.firelens.confBucket.grantRead(taskDefinition.taskRole);
+      props.firelens.deliveryStream.grantPutRecords(taskDefinition.taskRole);
+      props.firelens.logGroup.grantWrite(taskDefinition.taskRole);
+    }
 
     // ECS Service
     const service = new cdk.aws_ecs.FargateService(this, "Service", {
@@ -69,16 +139,18 @@ export class EcsConstruct extends Construct {
       minHealthyPercent: 100,
       maxHealthyPercent: 200,
       deploymentStrategy: cdk.aws_ecs.DeploymentStrategy.BLUE_GREEN,
-      bakeTime: cdk.Duration.minutes(3),
+      bakeTime: cdk.Duration.minutes(1),
       vpcSubnets: vpc.selectSubnets({
         subnetType: cdk.aws_ec2.SubnetType.PRIVATE_WITH_EGRESS,
       }),
       circuitBreaker: { rollback: true },
+      healthCheckGracePeriod: cdk.Duration.seconds(10),
+      enableExecuteCommand: true,
     });
     service.connections.allowFrom(props.alb, cdk.aws_ec2.Port.tcp(80));
 
     const target = service.loadBalancerTarget({
-      containerName,
+      containerName: webContainer.containerName,
       containerPort: 80,
       protocol: cdk.aws_ecs.Protocol.TCP,
       alternateTarget: new cdk.aws_ecs.AlternateTarget("AlternateTarget", {
