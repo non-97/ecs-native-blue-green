@@ -58,6 +58,24 @@ app.get("/crash", (req: Request, res: Response) => {
   throw new Error("Application crash test - intentional exception");
 });
 
+app.get("/large-log", (req: Request, res: Response) => {
+  // 16KB を超える大きなログを生成
+  // FluentBitの16KB制限をテストするため
+  const largeData = {
+    message: "Testing 16KB+ log handling",
+    timestamp: new Date().toISOString(),
+    data: "X".repeat(20000),
+  };
+
+  req.log.error(largeData, "Large log entry generated");
+
+  res.status(200).json({
+    message: "Large log generated successfully",
+    logSize: JSON.stringify(largeData).length,
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.use((req: Request, res: Response) => {
   res.status(404).json({ error: "Not Found" });
 });
