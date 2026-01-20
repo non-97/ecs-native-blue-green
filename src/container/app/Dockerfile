@@ -21,8 +21,9 @@ RUN pnpm build
 # 本番用イメージ
 FROM node:24-alpine
 
-# pnpmをインストール
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# pnpmとscriptをインストール
+RUN corepack enable && corepack prepare pnpm@latest --activate && \
+    apk add --no-cache util-linux
 
 WORKDIR /app
 

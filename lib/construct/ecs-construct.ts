@@ -1,5 +1,6 @@
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
+import { BucketConstruct } from "./bucket-construct";
 import * as path from "path";
 
 export interface EcsConstructProps {
@@ -23,10 +24,23 @@ export class EcsConstruct extends Construct {
     // VPC
     const vpc = props.vpc;
 
+    // ECS Exec log destinations
+    const ecsExecLogBucketConstruct = new BucketConstruct(
+      this,
+      "ecsExecLogBucketConstruct"
+    );
+
     // ECS Cluster
     const cluster = new cdk.aws_ecs.Cluster(this, "Cluster", {
       vpc,
       containerInsightsV2: cdk.aws_ecs.ContainerInsights.ENHANCED,
+      executeCommandConfiguration: {
+        logConfiguration: {
+          s3Bucket: ecsExecLogBucketConstruct.bucket,
+          s3EncryptionEnabled: true,
+        },
+        logging: cdk.aws_ecs.ExecuteCommandLogging.OVERRIDE,
+      },
     });
 
     // Task Definition
@@ -130,6 +144,7 @@ export class EcsConstruct extends Construct {
       props.firelens.deliveryStream.grantPutRecords(taskDefinition.taskRole);
       props.firelens.logGroup.grantWrite(taskDefinition.taskRole);
     }
+    ecsExecLogBucketConstruct.bucket.grantPut(taskDefinition.taskRole);
 
     // ECS Service
     const service = new cdk.aws_ecs.FargateService(this, "Service", {
