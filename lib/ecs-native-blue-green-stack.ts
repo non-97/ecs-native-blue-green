@@ -26,6 +26,7 @@ export class EcsNativeBlueGreenStack extends cdk.Stack {
         logGroup: firelensConstruct.firelensLogGroup,
         confBucket: firelensConstruct.firelensConfBucket,
       },
+      enableFluentBitMetrics: true,
     });
   }
 }

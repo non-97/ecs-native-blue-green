@@ -2,6 +2,7 @@ import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 import { BucketConstruct } from "./bucket-construct";
 import * as path from "path";
+import * as fs from "fs";
 
 export interface EcsConstructProps {
   vpc: cdk.aws_ec2.IVpc;
@@ -15,6 +16,8 @@ export interface EcsConstructProps {
     logGroup: cdk.aws_logs.ILogGroup;
     confBucket: cdk.aws_s3.IBucket;
   };
+  /** Fluent BitのメトリクスをCloudWatch Agentで収集する */
+  enableFluentBitMetrics?: boolean;
 }
 
 export class EcsConstruct extends Construct {
@@ -121,28 +124,106 @@ export class EcsConstruct extends Construct {
     });
 
     if (props.firelens) {
-      taskDefinition.addFirelensLogRouter("logRouter", {
-        image: cdk.aws_ecs.ContainerImage.fromRegistry(
-          "public.ecr.aws/aws-observability/aws-for-fluent-bit:init-3.1.1"
-        ),
-        essential: true,
-        logging: cdk.aws_ecs.LogDrivers.awsLogs({
-          streamPrefix: `firelens/${taskDefinition.family}`,
-        }),
-        firelensConfig: {
-          type: cdk.aws_ecs.FirelensLogRouterType.FLUENTBIT,
-        },
-        environment: {
-          LOG_GROUP_NAME: props.firelens.logGroup.logGroupName,
-          FIREHOSE_DELIVERY_STREAM_NAME:
-            props.firelens.deliveryStream.deliveryStreamName,
-          aws_fluent_bit_init_s3_1: `${props.firelens.confBucket.bucketArn}/extra.conf`,
-          aws_fluent_bit_init_s3_2: `${props.firelens.confBucket.bucketArn}/parsers_custom.conf`,
-        },
-      });
+      const logRouterContainer = taskDefinition.addFirelensLogRouter(
+        "logRouter",
+        {
+          image: cdk.aws_ecs.ContainerImage.fromRegistry(
+            "public.ecr.aws/aws-observability/aws-for-fluent-bit:init-3.2.0"
+          ),
+          essential: true,
+          logging: cdk.aws_ecs.LogDrivers.awsLogs({
+            streamPrefix: `firelens/${taskDefinition.family}`,
+          }),
+          firelensConfig: {
+            type: cdk.aws_ecs.FirelensLogRouterType.FLUENTBIT,
+          },
+          environment: {
+            LOG_GROUP_NAME: props.firelens.logGroup.logGroupName,
+            FIREHOSE_DELIVERY_STREAM_NAME:
+              props.firelens.deliveryStream.deliveryStreamName,
+            aws_fluent_bit_init_s3_1: `${props.firelens.confBucket.bucketArn}/extra.conf`,
+            aws_fluent_bit_init_s3_2: `${props.firelens.confBucket.bucketArn}/parsers_custom.conf`,
+          },
+        }
+      );
       props.firelens.confBucket.grantRead(taskDefinition.taskRole);
       props.firelens.deliveryStream.grantPutRecords(taskDefinition.taskRole);
       props.firelens.logGroup.grantWrite(taskDefinition.taskRole);
+
+      // ADOTでFluent Bitのメトリクスを収集
+      if (props.enableFluentBitMetrics) {
+        // ADOTの設定ファイルをSSM Parameter Storeに保存
+        // ref: https://aws-otel.github.io/docs/getting-started/container-insights/ecs-prometheus/
+        const otelConfig = fs.readFileSync(
+          path.join(__dirname, "../../src/otel-config/otel-config.yaml"),
+          "utf-8"
+        );
+        const otelConfigParameter = new cdk.aws_ssm.StringParameter(
+          this,
+          "OtelConfig",
+          {
+            parameterName: `/ecs/${cdk.Names.uniqueId(this)}/otel-config`,
+            stringValue: otelConfig,
+          }
+        );
+
+        // ADOTコンテナを追加
+        const otelContainer = taskDefinition.addContainer("AdotCollector", {
+          containerName: "adot-collector",
+          image: cdk.aws_ecs.ContainerImage.fromRegistry(
+            "public.ecr.aws/aws-observability/aws-otel-collector:v0.46.0"
+          ),
+          essential: false,
+          logging: cdk.aws_ecs.LogDrivers.awsLogs({
+            streamPrefix: "adot-collector",
+          }),
+          secrets: {
+            AOT_CONFIG_CONTENT:
+              cdk.aws_ecs.Secret.fromSsmParameter(otelConfigParameter),
+          },
+        });
+
+        otelContainer.addContainerDependencies({
+          container: logRouterContainer,
+          condition: cdk.aws_ecs.ContainerDependencyCondition.START,
+        });
+
+        taskDefinition.taskRole.addToPrincipalPolicy(
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: [
+              "logs:CreateLogGroup",
+              "logs:CreateLogStream",
+              "logs:PutLogEvents",
+              "logs:PutRetentionPolicy",
+              "logs:DescribeLogGroups",
+              "logs:DescribeLogStreams",
+            ],
+            resources: [
+              cdk.Arn.format(
+                {
+                  service: "logs",
+                  resource: "log-group",
+                  resourceName: `/aws/ecs/containerinsights/${cluster.clusterName}/prometheus:*`,
+                  arnFormat: cdk.ArnFormat.COLON_RESOURCE_NAME,
+                },
+                cdk.Stack.of(this)
+              ),
+            ],
+          })
+        );
+
+        // resourcedetection processor用
+        taskDefinition.taskRole.addToPrincipalPolicy(
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["ecs:DescribeTasks"],
+            resources: ["*"],
+          })
+        );
+
+        otelConfigParameter.grantRead(taskDefinition.executionRole!);
+      }
     }
     ecsExecLogBucketConstruct.bucket.grantPut(taskDefinition.taskRole);
 

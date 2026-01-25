@@ -1,0 +1,117 @@
+# Fluent BitのPrometheusメトリクスのスクレイピング
+# ref: https://aws-otel.github.io/docs/getting-started/container-insights/ecs-prometheus/
+receivers:
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: "fluent-bit-metrics"
+          scrape_interval: 1m
+          scrape_timeout: 10s
+          static_configs:
+            - targets: ["127.0.0.1:2020"]
+          metrics_path: "/api/v2/metrics/prometheus"
+
+processors:
+  # メモリ使用量を制限
+  # ref : https://github.com/open-telemetry/opentelemetry-collector/blob/main/processor/memorylimiterprocessor/README.md
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 100
+    spike_limit_mib: 25
+
+  # 特定のnameラベルを持つメトリクスを除外
+  filter/exclude_names:
+    metrics:
+      datapoint:
+        - 'attributes["name"] == "tcp.0"'
+        - 'attributes["name"] == "forward.1"'
+        - 'attributes["name"] == "re_emitted"'
+        - 'IsMatch(attributes["name"], "^null\\..*")'
+        - 'IsMatch(attributes["name"], "^emitter_for_multiline\\..*")'
+
+  # ECSタスクメタデータを追加
+  # ref : https://docs.aws.amazon.com/AmazonECS/latest/developerguide/fargate-metadata.html
+  resourcedetection:
+    # ref : https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/processor/resourcedetectionprocessor/internal/aws/ecs/documentation.md
+    detectors: [env, ecs]
+    timeout: 5s
+    override: false
+
+  # ref : opentelemetry-collector-contrib/processor/resourceprocessor/README.md at main · open-telemetry/opentelemetry-collector-contrib https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/processor/resourceprocessor/README.md
+  resource:
+    attributes:
+      # ARNからClusterNameを抽出
+      - key: aws.ecs.cluster.arn
+        pattern: "^arn:aws:ecs:[^:]+:[^:]+:cluster/(?P<ClusterName>[^/]+)$"
+        action: extract
+      - key: TaskId
+        from_attribute: aws.ecs.task.id
+        action: insert
+      - key: TaskDefinitionFamily
+        from_attribute: aws.ecs.task.family
+        action: insert
+      # 不要な属性を削除
+      - key: aws.ecs.task.arn
+        action: delete
+      - key: aws.log.group.arns
+        action: delete
+      - key: aws.log.stream.arns
+        action: delete
+
+  # counterをデルタ値に変換
+  # ref : https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/processor/cumulativetodeltaprocessor/README.md
+  cumulativetodelta:
+    include:
+      metrics:
+        - "^fluentbit_(input|output)_.*_total$"
+      match_type: regexp
+
+  # デルタ値に変換したメトリクスについて、メトリクス名の _total を削除
+  # ref : https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/processor/metricstransformprocessor/README.md
+  metricstransform:
+    transforms:
+      - include: "^(.*)_total$"
+        match_type: regexp
+        action: update
+        new_name: "$${1}"
+
+  # ref : https://github.com/open-telemetry/opentelemetry-collector/tree/main/processor#recommended-processors
+  batch:
+    timeout: 60s
+
+exporters:
+  # ref : https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/exporter/awsemfexporter/README.md
+  awsemf:
+    namespace: ECS/FluentBit
+    log_group_name: "/aws/ecs/containerinsights/{ClusterName}/prometheus"
+    log_stream_name: "/task/{TaskId}/fluent-bit"
+    log_retention: 14
+    resource_to_telemetry_conversion:
+      enabled: true
+    dimension_rollup_option: NoDimensionRollup
+    metric_declarations:
+      - dimensions:
+          - [ClusterName, TaskId, TaskDefinitionFamily, name]
+        metric_name_selectors:
+          - "^fluentbit_input_.*"
+          - "^fluentbit_output_.*"
+      - dimensions:
+          - [ClusterName, TaskId, TaskDefinitionFamily]
+        metric_name_selectors:
+          - "^fluentbit_storage_.*"
+
+service:
+  pipelines:
+    metrics:
+      receivers: [prometheus]
+      processors:
+        [
+          memory_limiter,
+          filter/exclude_names,
+          resourcedetection,
+          resource,
+          cumulativetodelta,
+          metricstransform,
+          batch,
+        ]
+      exporters: [awsemf]
