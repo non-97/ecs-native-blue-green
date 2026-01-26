@@ -24,7 +24,7 @@ processors:
     metrics:
       datapoint:
         - 'attributes["name"] == "tcp.0"'
-        - 'attributes["name"] == "forward.1"'
+        - 'attributes["name"] == "forward.2"'
         - 'attributes["name"] == "re_emitted"'
         - 'IsMatch(attributes["name"], "^null\\..*")'
         - 'IsMatch(attributes["name"], "^emitter_for_multiline\\..*")'
