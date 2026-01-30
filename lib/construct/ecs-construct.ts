@@ -16,8 +16,17 @@ export interface EcsConstructProps {
     logGroup: cdk.aws_logs.ILogGroup;
     confBucket: cdk.aws_s3.IBucket;
   };
-  /** Fluent BitのメトリクスをCloudWatch Agentで収集する */
   enableFluentBitMetrics?: boolean;
+  aurora?: {
+    cluster: cdk.aws_rds.IDatabaseCluster;
+    secret: cdk.aws_secretsmanager.ISecret;
+  };
+  valkey?: {
+    endpoint: string;
+    port: number;
+    securityGroup: cdk.aws_ec2.ISecurityGroup;
+  };
+  enableApplicationSignals?: boolean;
 }
 
 export class EcsConstruct extends Construct {
@@ -60,6 +69,37 @@ export class EcsConstruct extends Construct {
       }
     );
 
+    // Application Signals用: 自動計装ライブラリの共有ボリューム
+    if (props.enableApplicationSignals) {
+      taskDefinition.addVolume({
+        name: "opentelemetry-auto-instrumentation",
+      });
+
+      // init コンテナ: 自動計装ライブラリを共有ボリュームにコピー
+      const initContainer = taskDefinition.addContainer("InitContainer", {
+        containerName: "init",
+        image: cdk.aws_ecs.ContainerImage.fromRegistry(
+          "public.ecr.aws/aws-observability/adot-autoinstrumentation-node:v0.8.0"
+        ),
+        essential: false,
+        command: [
+          "cp",
+          "-r",
+          "/autoinstrumentation/.",
+          "/otel-auto-instrumentation/",
+        ],
+        logging: cdk.aws_ecs.LogDrivers.awsLogs({
+          streamPrefix: "init",
+        }),
+      });
+
+      initContainer.addMountPoints({
+        sourceVolume: "opentelemetry-auto-instrumentation",
+        containerPath: "/otel-auto-instrumentation",
+        readOnly: false,
+      });
+    }
+
     // Container
     const webContainer = taskDefinition.addContainer("WebContainer", {
       containerName: "web",
@@ -85,6 +125,56 @@ export class EcsConstruct extends Construct {
           }),
     });
 
+    // appコンテナの環境変数
+    const appEnvironment: Record<string, string> = {};
+    const appSecrets: Record<string, cdk.aws_ecs.Secret> = {};
+
+    // Valkey接続設定
+    if (props.valkey) {
+      appEnvironment["VALKEY_HOST"] = props.valkey.endpoint;
+      appEnvironment["VALKEY_PORT"] = props.valkey.port.toString();
+      appEnvironment["VALKEY_TLS"] = "true";
+    }
+
+    if (props.enableApplicationSignals) {
+      appEnvironment["NODE_OPTIONS"] =
+        "--require /otel-auto-instrumentation/autoinstrumentation.js";
+      appEnvironment["OTEL_RESOURCE_ATTRIBUTES"] =
+        "service.name=express-app,deployment.environment=production";
+      appEnvironment["OTEL_EXPORTER_OTLP_ENDPOINT"] = "http://localhost:4317";
+      appEnvironment["OTEL_EXPORTER_OTLP_PROTOCOL"] = "grpc";
+      appEnvironment["OTEL_TRACES_EXPORTER"] = "otlp";
+      appEnvironment["OTEL_METRICS_EXPORTER"] = "none";
+      appEnvironment["OTEL_LOGS_EXPORTER"] = "none";
+      appEnvironment["OTEL_TRACES_SAMPLER"] = "parentbased_always_on";
+      appEnvironment["OTEL_PROPAGATORS"] = "tracecontext,baggage,xray";
+    }
+
+    // Aurora接続設定（Secrets Manager経由）
+    // シークレットの各フィールドを個別に取得し、アプリ側でDATABASE_URLを構築
+    if (props.aurora) {
+      appSecrets["DB_HOST"] = cdk.aws_ecs.Secret.fromSecretsManager(
+        props.aurora.secret,
+        "host"
+      );
+      appSecrets["DB_PORT"] = cdk.aws_ecs.Secret.fromSecretsManager(
+        props.aurora.secret,
+        "port"
+      );
+      appSecrets["DB_USERNAME"] = cdk.aws_ecs.Secret.fromSecretsManager(
+        props.aurora.secret,
+        "username"
+      );
+      appSecrets["DB_PASSWORD"] = cdk.aws_ecs.Secret.fromSecretsManager(
+        props.aurora.secret,
+        "password"
+      );
+      appSecrets["DB_NAME"] = cdk.aws_ecs.Secret.fromSecretsManager(
+        props.aurora.secret,
+        "dbname"
+      );
+    }
+
     const appContainer = taskDefinition.addContainer("AppContainer", {
       containerName: "app",
       image: cdk.aws_ecs.ContainerImage.fromAsset(
@@ -94,6 +184,8 @@ export class EcsConstruct extends Construct {
         }
       ),
       essential: true,
+      environment: appEnvironment,
+      secrets: appSecrets,
       healthCheck: {
         command: [
           "CMD-SHELL",
@@ -117,6 +209,22 @@ export class EcsConstruct extends Construct {
             streamPrefix: "app",
           }),
     });
+
+    if (props.enableApplicationSignals) {
+      appContainer.addMountPoints({
+        sourceVolume: "opentelemetry-auto-instrumentation",
+        containerPath: "/otel-auto-instrumentation",
+        readOnly: true,
+      });
+
+      const initContainer = taskDefinition.findContainer("init");
+      if (initContainer) {
+        appContainer.addContainerDependencies({
+          container: initContainer,
+          condition: cdk.aws_ecs.ContainerDependencyCondition.SUCCESS,
+        });
+      }
+    }
 
     webContainer.addContainerDependencies({
       container: appContainer,
@@ -150,12 +258,12 @@ export class EcsConstruct extends Construct {
       props.firelens.deliveryStream.grantPutRecords(taskDefinition.taskRole);
       props.firelens.logGroup.grantWrite(taskDefinition.taskRole);
 
-      // ADOTでFluent Bitのメトリクスを収集
-      if (props.enableFluentBitMetrics) {
-        // ADOTの設定ファイルをSSM Parameter Storeに保存
-        // ref: https://aws-otel.github.io/docs/getting-started/container-insights/ecs-prometheus/
+      if (props.enableFluentBitMetrics || props.enableApplicationSignals) {
+        const otelConfigPath = props.enableApplicationSignals
+          ? "../../src/otel-config/otel-app-signals.yaml"
+          : "../../src/otel-config/otel-config.yaml";
         const otelConfig = fs.readFileSync(
-          path.join(__dirname, "../../src/otel-config/otel-config.yaml"),
+          path.join(__dirname, otelConfigPath),
           "utf-8"
         );
         const otelConfigParameter = new cdk.aws_ssm.StringParameter(
@@ -177,6 +285,9 @@ export class EcsConstruct extends Construct {
           logging: cdk.aws_ecs.LogDrivers.awsLogs({
             streamPrefix: "adot-collector",
           }),
+          environment: {
+            AWS_REGION: cdk.Stack.of(this).region,
+          },
           secrets: {
             AOT_CONFIG_CONTENT:
               cdk.aws_ecs.Secret.fromSsmParameter(otelConfigParameter),
@@ -222,6 +333,73 @@ export class EcsConstruct extends Construct {
           })
         );
 
+        // Application Signals用権限
+        if (props.enableApplicationSignals) {
+          taskDefinition.taskRole.addToPrincipalPolicy(
+            new cdk.aws_iam.PolicyStatement({
+              effect: cdk.aws_iam.Effect.ALLOW,
+              actions: [
+                "xray:PutTraceSegments",
+                "xray:PutTelemetryRecords",
+                "xray:GetSamplingRules",
+                "xray:GetSamplingTargets",
+                "xray:GetSamplingStatisticSummaries",
+              ],
+              resources: ["*"],
+            })
+          );
+
+          // Application Signals用CloudWatch Logs権限
+          taskDefinition.taskRole.addToPrincipalPolicy(
+            new cdk.aws_iam.PolicyStatement({
+              effect: cdk.aws_iam.Effect.ALLOW,
+              actions: [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "logs:PutRetentionPolicy",
+              ],
+              resources: [
+                cdk.Arn.format(
+                  {
+                    service: "logs",
+                    resource: "log-group",
+                    resourceName: "/aws/application-signals/data:*",
+                    arnFormat: cdk.ArnFormat.COLON_RESOURCE_NAME,
+                  },
+                  cdk.Stack.of(this)
+                ),
+              ],
+            })
+          );
+
+          // Application Signals API権限
+          taskDefinition.taskRole.addToPrincipalPolicy(
+            new cdk.aws_iam.PolicyStatement({
+              effect: cdk.aws_iam.Effect.ALLOW,
+              actions: [
+                "application-signals:StartDiscovery",
+                "application-signals:GetServiceLevelObjective",
+              ],
+              resources: ["*"],
+            })
+          );
+
+          // CloudWatch Metrics権限
+          taskDefinition.taskRole.addToPrincipalPolicy(
+            new cdk.aws_iam.PolicyStatement({
+              effect: cdk.aws_iam.Effect.ALLOW,
+              actions: ["cloudwatch:PutMetricData"],
+              resources: ["*"],
+              conditions: {
+                StringEquals: {
+                  "cloudwatch:namespace": "ApplicationSignals",
+                },
+              },
+            })
+          );
+        }
+
         otelConfigParameter.grantRead(taskDefinition.executionRole!);
       }
     }
@@ -231,7 +409,7 @@ export class EcsConstruct extends Construct {
     const service = new cdk.aws_ecs.FargateService(this, "Service", {
       cluster,
       taskDefinition,
-      desiredCount: 2,
+      desiredCount: 1,
       minHealthyPercent: 100,
       maxHealthyPercent: 200,
       deploymentStrategy: cdk.aws_ecs.DeploymentStrategy.BLUE_GREEN,
@@ -244,6 +422,22 @@ export class EcsConstruct extends Construct {
       enableExecuteCommand: true,
     });
     service.connections.allowFrom(props.alb, cdk.aws_ec2.Port.tcp(80));
+
+    if (props.aurora) {
+      props.aurora.cluster.connections.allowFrom(
+        service,
+        cdk.aws_ec2.Port.tcp(5432),
+        "Allow ECS to Aurora PostgreSQL"
+      );
+    }
+
+    if (props.valkey) {
+      props.valkey.securityGroup.addIngressRule(
+        service.connections.securityGroups[0],
+        cdk.aws_ec2.Port.tcp(props.valkey.port),
+        "Allow ECS to Valkey"
+      );
+    }
 
     const target = service.loadBalancerTarget({
       containerName: webContainer.containerName,

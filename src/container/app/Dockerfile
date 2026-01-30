@@ -6,9 +6,9 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
 # package.jsonとpnpm-lock.yamlをコピー
-COPY package.json pnpm-lock.yaml* ./
+COPY package.json pnpm-lock.yaml ./
 
-# 依存関係をインストール（devDependenciesも含む）
+# 依存関係をインストール（devDependencies含む、ビルドに必要）
 RUN pnpm install --frozen-lockfile
 
 # ソースコードとtsconfig.jsonをコピー
@@ -21,27 +21,20 @@ RUN pnpm build
 # 本番用イメージ
 FROM node:24-alpine
 
-# pnpmとscriptをインストール
-RUN corepack enable && corepack prepare pnpm@latest --activate && \
-    apk add --no-cache util-linux
+# 非rootユーザーを作成
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
 
 WORKDIR /app
 
-# package.jsonをコピー
-COPY package.json pnpm-lock.yaml* ./
+# ビルダーから本番用node_modulesとビルド成果物をコピー
+COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
+COPY --chown=nodejs:nodejs package.json ./
 
-# 本番用依存関係のみインストール
-RUN pnpm install --prod --frozen-lockfile
-
-# ビルド成果物をコピー
-COPY --from=builder /app/dist ./dist
-
-# 非rootユーザーで実行
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001 && \
-    chown -R nodejs:nodejs /app
 USER nodejs
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
+# nodeで直接実行（シグナル処理のため）
+CMD ["node", "dist/index.js"]
