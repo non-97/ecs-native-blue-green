@@ -203,6 +203,58 @@ router.get("/health", async (req: Request, res: Response) => {
   }
 });
 
+// スリープエンドポイント（レイテンシテスト用）
+router.get("/sleep", async (req: Request, res: Response) => {
+  const MAX_SECONDS = 10;
+
+  const rawSeconds = req.query.seconds;
+
+  // secondsパラメータが必須
+  if (rawSeconds === undefined) {
+    return res.status(400).json({
+      error: "Bad Request",
+      message: "Query parameter 'seconds' is required",
+    });
+  }
+
+  // 文字列以外はエラー
+  if (typeof rawSeconds !== "string") {
+    return res.status(400).json({
+      error: "Bad Request",
+      message: "Query parameter 'seconds' must be a single value",
+    });
+  }
+
+  // 数値のみで構成されているかチェック（先頭ゼロは許可）
+  if (!/^\d+$/.test(rawSeconds)) {
+    return res.status(400).json({
+      error: "Bad Request",
+      message: "Query parameter 'seconds' must contain only digits",
+    });
+  }
+
+  const seconds = parseInt(rawSeconds, 10);
+
+  // 上限チェック
+  if (seconds > MAX_SECONDS) {
+    return res.status(400).json({
+      error: "Bad Request",
+      message: `Query parameter 'seconds' must be at most ${MAX_SECONDS}`,
+    });
+  }
+
+  req.log.info({ seconds }, "Sleep endpoint called");
+
+  await new Promise((resolve) => setTimeout(resolve, seconds * 1000));
+
+  res.status(200).json({
+    message: `Slept for ${seconds} seconds`,
+    seconds,
+    maxAllowed: MAX_SECONDS,
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // エラーテスト用エンドポイント
 router.get("/error", (req: Request, res: Response) => {
   req.log.error("Intentional error endpoint triggered");
