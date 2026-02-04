@@ -489,30 +489,6 @@ export class EcsConstruct extends Construct {
         "AWSXrayWriteOnlyAccess"
       )
     );
-
-    // Application Signals用CloudWatch Logs権限
-    this.taskDefinition.taskRole.addToPrincipalPolicy(
-      new cdk.aws_iam.PolicyStatement({
-        effect: cdk.aws_iam.Effect.ALLOW,
-        actions: [
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents",
-          "logs:PutRetentionPolicy",
-        ],
-        resources: [
-          cdk.Arn.format(
-            {
-              service: "logs",
-              resource: "log-group",
-              resourceName: "/aws/application-signals/data:*",
-              arnFormat: cdk.ArnFormat.COLON_RESOURCE_NAME,
-            },
-            cdk.Stack.of(this)
-          ),
-        ],
-      })
-    );
   }
 
   private createService(): cdk.aws_ecs.FargateService {
