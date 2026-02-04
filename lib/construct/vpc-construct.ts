@@ -10,7 +10,7 @@ export class VpcConstruct extends Construct {
     super(scope, id);
 
     const vpc = new cdk.aws_ec2.Vpc(this, "Default", {
-      ipAddresses: cdk.aws_ec2.IpAddresses.cidr("10.10.10.0/24"),
+      ipAddresses: cdk.aws_ec2.IpAddresses.cidr("10.10.8.0/22"),
       enableDnsHostnames: true,
       enableDnsSupport: true,
       natGateways: 1,
@@ -25,6 +25,11 @@ export class VpcConstruct extends Construct {
         {
           name: "Egress",
           subnetType: cdk.aws_ec2.SubnetType.PRIVATE_WITH_EGRESS,
+          cidrMask: 27,
+        },
+        {
+          name: "Isolated",
+          subnetType: cdk.aws_ec2.SubnetType.PRIVATE_ISOLATED,
           cidrMask: 27,
         },
       ],
