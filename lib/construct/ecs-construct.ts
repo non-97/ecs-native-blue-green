@@ -7,9 +7,9 @@ import * as fs from "fs";
 // コンテナイメージ
 const CONTAINER_IMAGES = {
   FLUENT_BIT: "public.ecr.aws/aws-observability/aws-for-fluent-bit:init-3.2.0",
-  ADOT_COLLECTOR: "public.ecr.aws/aws-observability/aws-otel-collector:v0.46.0",
+  ADOT_COLLECTOR: "public.ecr.aws/aws-observability/aws-otel-collector:v0.47.0",
   ADOT_NODE_AUTOINSTRUMENTATION:
-    "public.ecr.aws/aws-observability/adot-autoinstrumentation-node:v0.8.0",
+    "public.ecr.aws/aws-observability/adot-autoinstrumentation-node:v0.8.1",
 } as const;
 
 // OTEL設定ファイルパス
@@ -193,11 +193,20 @@ export class EcsConstruct extends Construct {
       // OTEL_RESOURCE_ATTRIBUTES: トレースに付与するリソース属性
       // - service.name: Application Signalsダッシュボードに表示されるサービス名
       // - deployment.environment: 環境名。分かりやすいように "ecs:<クラスター名>" 形式を設定
+      // - aws.log.group.names: ログ相関用
       // ref: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Application-Signals-ECS-Sidecar.html
       // ref: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/AppSignals-MetricsCollected.html
-      appEnvironment[
-        "OTEL_RESOURCE_ATTRIBUTES"
-      ] = `service.name=ecs-express-app,deployment.environment=ecs:${this.cluster.clusterName}`;
+      // ref: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Application-Signals-MetricLogCorrelation.html
+      const resourceAttributes = [
+        "service.name=ecs-express-app",
+        `deployment.environment=ecs:${this.cluster.clusterName}`,
+      ];
+      if (this.props.firelens) {
+        resourceAttributes.push(
+          `aws.log.group.names=${this.props.firelens.logGroup.logGroupName}`
+        );
+      }
+      appEnvironment["OTEL_RESOURCE_ATTRIBUTES"] = resourceAttributes.join(",");
 
       // OTEL_EXPORTER_OTLP_PROTOCOL: OTLPエクスポーターのプロトコル
       // http/protobuf（ポート4318）またはgrpc（ポート4317）を選択可能。ADOT Collectorは両方サポート

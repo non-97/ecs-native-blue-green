@@ -106,7 +106,7 @@ service:
   pipelines:
     traces:
       receivers: [otlp]
-      processors: [filter/exclude_health, resourcedetection, batch]
+      processors: [filter/exclude_health, batch]
       exporters: [otlphttp]
 
     metrics/fluent_bit:

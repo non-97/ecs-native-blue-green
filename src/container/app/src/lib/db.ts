@@ -70,7 +70,7 @@ export const initializeDatabase = async (
       logger.info("Database tables initialized");
       return;
     } catch (err) {
-      logger.warn(
+      logger.error(
         { err, attempt, maxRetries },
         "Failed to initialize database, retrying..."
       );
