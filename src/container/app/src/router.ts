@@ -34,7 +34,7 @@ router.get("/", async (req: Request, res: Response) => {
   const valkey = getValkey();
 
   try {
-    // セッション初期化（Valkeyが有効な場合）
+    // セッション初期化 (Valkeyが有効な場合)
     if (req.session && valkey) {
       if (!req.session.views) {
         req.session.views = 0;
@@ -44,7 +44,7 @@ router.get("/", async (req: Request, res: Response) => {
       req.session.lastVisit = new Date().toISOString();
     }
 
-    // DBに訪問履歴を記録（poolが設定されている場合）
+    // DBに訪問履歴を記録 (poolが設定されている場合)
     let visit: { id: number } | null = null;
     let counter: { count: number } | null = null;
     let sessionVisits: Array<{ id: number; path: string; created_at: Date }> =
@@ -168,7 +168,7 @@ router.get("/stats", async (req: Request, res: Response) => {
   }
 });
 
-// ヘルスチェック（DB/Cache接続確認）
+// ヘルスチェック (DB/Cache接続確認)
 router.get("/health", async (req: Request, res: Response) => {
   const pool = getPool();
   const valkey = getValkey();
@@ -203,7 +203,7 @@ router.get("/health", async (req: Request, res: Response) => {
   }
 });
 
-// スリープエンドポイント（レイテンシテスト用）
+// スリープエンドポイント (レイテンシテスト用)
 router.get("/sleep", async (req: Request, res: Response) => {
   const MAX_SECONDS = 10;
 
@@ -225,7 +225,7 @@ router.get("/sleep", async (req: Request, res: Response) => {
     });
   }
 
-  // 数値のみで構成されているかチェック（先頭ゼロは許可）
+  // 数値のみで構成されているかチェック (先頭ゼロは許可)
   if (!/^\d+$/.test(rawSeconds)) {
     return res.status(400).json({
       error: "Bad Request",

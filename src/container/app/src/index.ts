@@ -46,21 +46,17 @@ if (valkey) {
   );
 }
 
-// ルート
 app.use(router);
 
-// 404ハンドラー
 app.use((req: Request, res: Response) => {
   res.status(404).json({ error: "Not Found" });
 });
 
-// エラーハンドラー
 app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   req.log.error({ err }, "Error occurred");
   res.status(500).json({ error: "Internal Server Error" });
 });
 
-// サーバー起動
 const startServer = async () => {
   await initializeDatabase();
 

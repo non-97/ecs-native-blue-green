@@ -41,6 +41,7 @@ export interface EcsConstructProps {
     securityGroup: cdk.aws_ec2.ISecurityGroup;
   };
   enableApplicationSignals?: boolean;
+  approvalFunction?: cdk.aws_lambda.IFunction;
 }
 
 export class EcsConstruct extends Construct {
@@ -82,7 +83,8 @@ export class EcsConstruct extends Construct {
   ): cdk.aws_ecs.Cluster {
     return new cdk.aws_ecs.Cluster(this, "Cluster", {
       vpc: this.props.vpc,
-      containerInsightsV2: cdk.aws_ecs.ContainerInsights.ENHANCED,
+      containerInsightsV2: cdk.aws_ecs.ContainerInsights.DISABLED,
+      // containerInsightsV2: cdk.aws_ecs.ContainerInsights.ENHANCED,
       executeCommandConfiguration: {
         logConfiguration: {
           s3Bucket: execLogBucket,
@@ -504,7 +506,8 @@ export class EcsConstruct extends Construct {
     return new cdk.aws_ecs.FargateService(this, "Service", {
       cluster: this.cluster,
       taskDefinition: this.taskDefinition,
-      desiredCount: 2,
+      desiredCount: 1,
+      // desiredCount: 2,
       minHealthyPercent: 100,
       maxHealthyPercent: 200,
       deploymentStrategy: cdk.aws_ecs.DeploymentStrategy.BLUE_GREEN,
@@ -559,5 +562,20 @@ export class EcsConstruct extends Construct {
       }),
     });
     target.attachToApplicationTargetGroup(this.props.tg1);
+
+    // Lifecycle Hook追加（承認関数が指定されている場合）
+    if (this.props.approvalFunction) {
+      service.addLifecycleHook(
+        new cdk.aws_ecs.DeploymentLifecycleLambdaTarget(
+          this.props.approvalFunction,
+          "PostTestTrafficShiftHook",
+          {
+            lifecycleStages: [
+              cdk.aws_ecs.DeploymentLifecycleStage.POST_TEST_TRAFFIC_SHIFT,
+            ],
+          }
+        )
+      );
+    }
   }
 }
