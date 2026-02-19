@@ -5,9 +5,9 @@ import * as path from "path";
 /**
  * ECS Blue/Green Deployment承認用Lambda（S3ポーリング方式）
  *
- * S3バケットに承認/拒否オブジェクトが配置されるまでポーリングする。
- * - {revision_id}/approved → SUCCEEDED
- * - {revision_id}/rejected → FAILED
+ * S3オブジェクトのタグを確認して承認/拒否を判定する。
+ * - approval-status: approved → SUCCEEDED
+ * - approval-status: rejected → FAILED
  *
  * SNS Topic ARNはスタック側でaddEnvironment()で設定する。
  */
@@ -59,8 +59,15 @@ export class ApprovalLambdaConstruct extends Construct {
       }
     );
 
-    // S3読み取り権限（承認/拒否チェック用）
-    this.approvalBucket.grantRead(this.approvalFunction);
+    // S3権限（オブジェクト事前作成 + タグ確認用）
+    this.approvalBucket.grantPut(this.approvalFunction);
+    this.approvalFunction.addToRolePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        effect: cdk.aws_iam.Effect.ALLOW,
+        actions: ["s3:GetObjectTagging"],
+        resources: [this.approvalBucket.arnForObjects("*")],
+      })
+    );
 
     // ECS読み取り権限（サービス情報取得用）
     this.approvalFunction.addToRolePolicy(

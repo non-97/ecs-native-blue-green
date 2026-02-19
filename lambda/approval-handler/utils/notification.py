@@ -41,7 +41,6 @@ def create_approval_message(
             "textType": "client-markdown",
             "title": ":rocket: ECS Blue/Green Deployment - Approval Required",
             "description": description,
-            "keywords": [cluster_name, service_name],
         },
         "metadata": {
             "additionalContext": {

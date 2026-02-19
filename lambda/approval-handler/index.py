@@ -19,7 +19,9 @@ def handler(event: dict, context) -> dict:
     """
     ECS Blue/Green Deployment POST_TEST_TRAFFIC_SHIFT Lifecycle Hook Handler
 
-    S3バケットにオブジェクトがあるかポーリングして承認/拒否を判定する。
+    S3オブジェクトのタグを確認して承認/拒否を判定する。
+    初回呼び出し時にS3オブジェクトを事前作成し、カスタムアクションボタンで
+    タグ付け（approval-status: approved/rejected）されるのを待つ。
 
     イベント構造（ECS Native Blue/Green）:
     {
@@ -72,8 +74,15 @@ def handler(event: dict, context) -> dict:
     is_first_invocation = not hook_details.get("notificationSent", False)
 
     if is_first_invocation:
-        # 初回: SNS経由でSlack通知を送信
+        # 初回: S3オブジェクトを事前作成し、SNS経由でSlack通知を送信
         try:
+            # カスタムアクションボタンでタグ付けするためのオブジェクトを事前作成
+            s3_client.put_object(Bucket=bucket_name, Key=revision_id, Body=b"")
+            logger.info(
+                "Pre-created S3 object for tagging",
+                extra={"bucket": bucket_name, "key": revision_id},
+            )
+
             deployment_info = get_deployment_info(service_arn, revision_arn)
             message = create_approval_message(
                 bucket_name=bucket_name,
@@ -96,17 +105,19 @@ def handler(event: dict, context) -> dict:
 
         return hook_in_progress()
 
-    # 2回目以降: S3をチェック
-    if check_s3_object(bucket_name, f"{revision_id}/approved"):
-        logger.info("Deployment approved via S3")
+    # 2回目以降: S3オブジェクトのタグを確認
+    approval_status = check_approval_tag(bucket_name, revision_id)
+
+    if approval_status == "approved":
+        logger.info("Deployment approved via S3 tag")
         return hook_succeeded()
 
-    if check_s3_object(bucket_name, f"{revision_id}/rejected"):
-        logger.info("Deployment rejected via S3")
+    if approval_status == "rejected":
+        logger.info("Deployment rejected via S3 tag")
         return hook_failed()
 
     # まだ決定されていない → 再ポーリング
-    logger.info("No approval/rejection found, continuing to poll")
+    logger.info("No approval/rejection tag found, continuing to poll")
     return hook_in_progress()
 
 
@@ -126,18 +137,19 @@ def hook_in_progress() -> dict:
     }
 
 
-def check_s3_object(bucket: str, key: str) -> bool:
-    """S3にオブジェクトが存在するかチェック"""
+def check_approval_tag(bucket: str, key: str) -> str | None:
+    """S3オブジェクトのapproval-statusタグを確認"""
     try:
-        s3_client.head_object(Bucket=bucket, Key=key)
-        return True
-    except ClientError as e:
-        if e.response["Error"]["Code"] == "404":
-            return False
+        response = s3_client.get_object_tagging(Bucket=bucket, Key=key)
+        for tag in response.get("TagSet", []):
+            if tag["Key"] == "approval-status":
+                return tag["Value"]
+        return None
+    except ClientError:
         logger.exception(
-            "Error checking S3 object", extra={"bucket": bucket, "key": key}
+            "Error checking S3 object tags", extra={"bucket": bucket, "key": key}
         )
-        return False
+        return None
 
 
 def get_deployment_info(service_arn: str, target_revision_arn: str) -> dict:
