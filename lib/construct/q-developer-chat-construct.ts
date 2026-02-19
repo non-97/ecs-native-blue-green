@@ -46,6 +46,21 @@ export class QDeveloperChatConstruct extends Construct {
       })
     );
 
+    // ガードレールポリシー（カスタムアクションのCLIコマンド実行に必要）
+    const guardrailPolicy = new cdk.aws_iam.ManagedPolicy(
+      this,
+      "ChatbotGuardrailPolicy",
+      {
+        statements: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["s3:PutObject"],
+            resources: [`${props.approvalBucketArn}/*`],
+          }),
+        ],
+      }
+    );
+
     // Slack Channel Configuration
     const slackChannel = new cdk.aws_chatbot.SlackChannelConfiguration(
       this,
@@ -56,6 +71,7 @@ export class QDeveloperChatConstruct extends Construct {
         slackChannelId: props.slackChannelId,
         notificationTopics: [notificationTopic],
         role: chatbotRole,
+        guardrailPolicies: [guardrailPolicy],
         loggingLevel: cdk.aws_chatbot.LoggingLevel.INFO,
         userRoleRequired: false,
       }
@@ -78,17 +94,18 @@ export class QDeveloperChatConstruct extends Construct {
             notificationType: "Custom",
             criteria: [
               {
-                operator: "HAS_VALUE",
-                variableName: "bucketName",
-              },
-              {
-                operator: "HAS_VALUE",
-                variableName: "revisionId",
+                operator: "EQUALS",
+                variableName: "ActionGroup",
+                value: "ecs-blue-green-deployment",
               },
             ],
             variables: {
-              bucketName: "metadata.additionalContext.bucketName",
-              revisionId: "metadata.additionalContext.revisionId",
+              ActionGroup:
+                "event.metadata.additionalContext.ActionGroup",
+              bucketName:
+                "event.metadata.additionalContext.bucketName",
+              revisionId:
+                "event.metadata.additionalContext.revisionId",
             },
           },
         ],
@@ -111,24 +128,30 @@ export class QDeveloperChatConstruct extends Construct {
             notificationType: "Custom",
             criteria: [
               {
-                operator: "HAS_VALUE",
-                variableName: "bucketName",
-              },
-              {
-                operator: "HAS_VALUE",
-                variableName: "revisionId",
+                operator: "EQUALS",
+                variableName: "ActionGroup",
+                value: "ecs-blue-green-deployment",
               },
             ],
             variables: {
-              bucketName: "metadata.additionalContext.bucketName",
-              revisionId: "metadata.additionalContext.revisionId",
+              ActionGroup:
+                "event.metadata.additionalContext.ActionGroup",
+              bucketName:
+                "event.metadata.additionalContext.bucketName",
+              revisionId:
+                "event.metadata.additionalContext.revisionId",
             },
           },
         ],
       }
     );
 
-    slackChannel.node.addDependency(approveAction);
-    slackChannel.node.addDependency(rejectAction);
+    // カスタムアクションをチャンネル設定に関連付け
+    const cfnSlackChannel = slackChannel.node
+      .defaultChild as cdk.aws_chatbot.CfnSlackChannelConfiguration;
+    cfnSlackChannel.customizationResourceArns = [
+      approveAction.ref,
+      rejectAction.ref,
+    ];
   }
 }

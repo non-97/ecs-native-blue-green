@@ -11,8 +11,9 @@ def create_approval_message(
     https://docs.aws.amazon.com/chatbot/latest/adminguide/custom-notifs.html
 
     カスタムアクションで使用する変数:
-    - bucketName: metadata.additionalContext.bucketName
-    - revisionId: metadata.additionalContext.revisionId
+    - ActionGroup: event.metadata.additionalContext.ActionGroup
+    - bucketName: event.metadata.additionalContext.bucketName
+    - revisionId: event.metadata.additionalContext.revisionId
     """
 
     account_id = deployment_info.get("accountId", "unknown")
@@ -23,12 +24,12 @@ def create_approval_message(
     service_revision_url = deployment_info.get("serviceRevisionUrl", "#")
 
     description = (
-        f"*Account*: `{account_id}`\n"
-        f"*Region*: `{region}`\n"
-        f"*Cluster*: `{cluster_name}`\n"
-        f"*Service*: `{service_name}`\n"
-        f"*Deployment ID*: `{deployment_id}`\n"
-        f"*Service Revision*: {service_revision_url}\n\n"
+        f"- *Account* : `{account_id}`\n"
+        f"- *Region* : `{region}`\n"
+        f"- *ECS Cluster* : `{cluster_name}`\n"
+        f"- *ECS Service* : `{service_name}`\n"
+        f"- *Deployment ID* : `{deployment_id}`\n"
+        f"- *Service Revision* : {service_revision_url}\n\n"
         f"Test traffic has been successfully shifted to the new task revision.\n"
         f"Please review and approve or reject this deployment."
     )
@@ -44,6 +45,7 @@ def create_approval_message(
         },
         "metadata": {
             "additionalContext": {
+                "ActionGroup": "ecs-blue-green-deployment",
                 "bucketName": bucket_name,
                 "revisionId": revision_id,
             },

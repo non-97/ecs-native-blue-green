@@ -1,6 +1,6 @@
 FROM nginx:stable-alpine
 
-# scriptをインストール
+# ECS Exec のログ出力用に script をインストール
 RUN apk add --no-cache util-linux
 
 COPY ./html/ /usr/share/nginx/html/
