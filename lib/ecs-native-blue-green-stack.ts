@@ -41,14 +41,13 @@ export class EcsNativeBlueGreenStack extends cdk.Stack {
     });
     const firelensConstruct = new FirelensConstruct(this, "FirelensConstruct");
 
-    // Approval Lambda Construct（S3バケットを先に作成）
+    // Approval Lambda Construct
     const approvalLambda = new ApprovalLambdaConstruct(this, "ApprovalLambda");
 
-    // Q Developer Chat Construct（S3バケットARNを渡す）
+    // Q Developer Chat Construct
     const qDeveloperChat = new QDeveloperChatConstruct(this, "QDeveloperChat", {
       slackWorkspaceId: props.slackWorkspaceId,
       slackChannelId: props.slackChannelId,
-      approvalBucketArn: approvalLambda.approvalBucket.bucketArn,
     });
 
     // LambdaにSNS Topic publish権限を付与

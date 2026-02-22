@@ -4,15 +4,17 @@ import { Construct } from "constructs";
 export interface QDeveloperChatConstructProps {
   slackWorkspaceId: string;
   slackChannelId: string;
-  approvalBucketArn: string;
 }
 
 /**
  * Amazon Q Developer in chat applications (旧AWS Chatbot) のカスタムアクション設定
  * ECS Blue/Greenデプロイメントの承認/拒否ボタンを提供
  *
- * 承認: S3オブジェクトに approval-status: approved タグを付与
- * 拒否: S3オブジェクトに approval-status: rejected タグを付与
+ * 承認: SSM Parameterの値を approved に更新
+ * 拒否: SSM Parameterの値を rejected に更新
+ *
+ * パラメータ名: /ecs/<cluster>/<service>/ecs-native-blue-green-approval/<revisionId>
+ * $parameterName = SSMパラメータ名 (通知のadditionalContextから取得)
  */
 export class QDeveloperChatConstruct extends Construct {
   readonly slackChannel: cdk.aws_chatbot.SlackChannelConfiguration;
@@ -24,6 +26,10 @@ export class QDeveloperChatConstruct extends Construct {
     props: QDeveloperChatConstructProps
   ) {
     super(scope, id);
+
+    const region = cdk.Stack.of(this).region;
+    const account = cdk.Stack.of(this).account;
+    const ssmParameterArn = `arn:aws:ssm:${region}:${account}:parameter/ecs/*/*/ecs-native-blue-green-approval/*`;
 
     // SNS Topic for deployment notifications
     const notificationTopic = new cdk.aws_sns.Topic(
@@ -37,12 +43,12 @@ export class QDeveloperChatConstruct extends Construct {
       assumedBy: new cdk.aws_iam.ServicePrincipal("chatbot.amazonaws.com"),
     });
 
-    // S3 PutObjectTagging権限（承認/拒否タグ付与用）
+    // SSM PutParameter権限（承認/拒否ステータス更新用）
     chatbotRole.addToPolicy(
       new cdk.aws_iam.PolicyStatement({
         effect: cdk.aws_iam.Effect.ALLOW,
-        actions: ["s3:PutObjectTagging"],
-        resources: [`${props.approvalBucketArn}/*`],
+        actions: ["ssm:PutParameter"],
+        resources: [ssmParameterArn],
       })
     );
 
@@ -54,8 +60,8 @@ export class QDeveloperChatConstruct extends Construct {
         statements: [
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
-            actions: ["s3:PutObjectTagging"],
-            resources: [`${props.approvalBucketArn}/*`],
+            actions: ["ssm:PutParameter"],
+            resources: [ssmParameterArn],
           }),
         ],
       }
@@ -78,78 +84,72 @@ export class QDeveloperChatConstruct extends Construct {
     );
     this.slackChannel = slackChannel;
 
-    // カスタムアクション1: 承認（S3オブジェクトにapprovedタグを付与）
+    // カスタムアクション1: POST_TEST_TRAFFIC_SHIFT 承認
     const approveAction = new cdk.aws_chatbot.CfnCustomAction(
       this,
-      "ApproveDeploymentAction",
+      "PostTestTrafficShiftApproveAction",
       {
-        actionName: "ApproveEcsDeployment",
-        aliasName: "approve-ecs-deployment",
+        actionName: "PostTestTrafficShiftApprove",
+        aliasName: "post-test-traffic-approve",
         definition: {
-          commandText: `aws s3api put-object-tagging --bucket $bucketName --key "$revisionId" --tagging '{"TagSet":[{"Key":"approval-status","Value":"approved"}]}'`,
+          commandText:
+            "ssm put-parameter --name $parameterName --value approved --type String --region $region",
         },
         attachments: [
           {
-            buttonText: "✅ 承認",
+            buttonText: "🔁 再ルーティング",
             notificationType: "Custom",
             criteria: [
               {
                 operator: "HAS_VALUE",
-                variableName: "bucketName",
-              },
-              {
-                operator: "HAS_VALUE",
-                variableName: "revisionId",
+                variableName: "parameterName",
               },
               {
                 operator: "EQUALS",
                 variableName: "ActionGroup",
-                value: "ecs-blue-green-deployment",
+                value: "ecs-blue-green-deployment_POST_TEST_TRAFFIC_SHIFT",
               },
             ],
             variables: {
               ActionGroup: "event.metadata.additionalContext.ActionGroup",
-              bucketName: "event.metadata.additionalContext.bucketName",
-              revisionId: "event.metadata.additionalContext.revisionId",
+              parameterName: "event.metadata.additionalContext.parameterName",
+              region: "event.metadata.additionalContext.region",
             },
           },
         ],
       }
     );
 
-    // カスタムアクション2: 拒否（S3オブジェクトにrejectedタグを付与）
+    // カスタムアクション2: POST_TEST_TRAFFIC_SHIFT 拒否
     const rejectAction = new cdk.aws_chatbot.CfnCustomAction(
       this,
-      "RejectDeploymentAction",
+      "PostTestTrafficShiftRejectAction",
       {
-        actionName: "RejectEcsDeployment",
-        aliasName: "reject-ecs-deployment",
+        actionName: "PostTestTrafficShiftReject",
+        aliasName: "post-test-traffic-reject",
         definition: {
-          commandText: `aws s3api put-object-tagging --bucket $bucketName --key "$revisionId" --tagging '{"TagSet":[{"Key":"approval-status","Value":"rejected"}]}'`,
+          commandText:
+            "ssm put-parameter --name $parameterName --value rejected --type String --region $region",
         },
         attachments: [
           {
-            buttonText: "❌ 拒否",
+            buttonText: "❌ ロールバック",
             notificationType: "Custom",
             criteria: [
               {
                 operator: "HAS_VALUE",
-                variableName: "bucketName",
-              },
-              {
-                operator: "HAS_VALUE",
-                variableName: "revisionId",
+                variableName: "parameterName",
               },
               {
                 operator: "EQUALS",
                 variableName: "ActionGroup",
-                value: "ecs-blue-green-deployment",
+                value: "ecs-blue-green-deployment_POST_TEST_TRAFFIC_SHIFT",
               },
             ],
             variables: {
               ActionGroup: "event.metadata.additionalContext.ActionGroup",
-              bucketName: "event.metadata.additionalContext.bucketName",
-              revisionId: "event.metadata.additionalContext.revisionId",
+              parameterName: "event.metadata.additionalContext.parameterName",
+              region: "event.metadata.additionalContext.region",
             },
           },
         ],

@@ -10,7 +10,7 @@ tracer = Tracer()
 
 sns_client = boto3.client("sns")
 ecs_client = boto3.client("ecs")
-s3_client = boto3.client("s3")
+ssm_client = boto3.client("ssm")
 
 
 @tracer.capture_lambda_handler
@@ -19,9 +19,11 @@ def handler(event: dict, context) -> dict:
     """
     ECS Blue/Green Deployment POST_TEST_TRAFFIC_SHIFT Lifecycle Hook Handler
 
-    S3オブジェクトのタグを確認して承認/拒否を判定する。
-    初回呼び出し時にS3オブジェクトを事前作成し、カスタムアクションボタンで
-    タグ付け（approval-status: approved/rejected）されるのを待つ。
+    SSM Parameterの値を確認して承認/拒否を判定する。
+    初回呼び出し時にSlack通知を送信し、カスタムアクションボタンで
+    SSMパラメータが作成（approved/rejected）されるのを待つ。
+
+    パラメータ名: /ecs/<cluster>/<service>/ecs-native-blue-green-approval/<revisionId>
 
     イベント構造（ECS Native Blue/Green）:
     {
@@ -57,16 +59,24 @@ def handler(event: dict, context) -> dict:
         logger.error("Missing required fields in event")
         return hook_failed()
 
-    # revision_idを抽出（S3キーに使用）
+    # service ARNからクラスター名・サービス名を抽出
+    arn_parts = service_arn.split(":")
+    resource_parts = arn_parts[5].split("/")
+    cluster_name = resource_parts[1]
+    service_name = resource_parts[2]
+
+    # revision_idを抽出
     revision_id = revision_arn.split("/")[-1]
-    bucket_name = os.environ["S3_BUCKET_NAME"]
+
+    # SSMパラメータ名を構築
+    parameter_name = f"/ecs/{cluster_name}/{service_name}/ecs-native-blue-green-approval/{revision_id}"
 
     logger.info(
         "Processing lifecycle hook",
         extra={
             "service_arn": service_arn,
             "revision_id": revision_id,
-            "bucket_name": bucket_name,
+            "parameter_name": parameter_name,
         },
     )
 
@@ -74,19 +84,11 @@ def handler(event: dict, context) -> dict:
     is_first_invocation = not hook_details.get("notificationSent", False)
 
     if is_first_invocation:
-        # 初回: S3オブジェクトを事前作成し、SNS経由でSlack通知を送信
+        # 初回: SNS経由でSlack通知を送信（パラメータはカスタムアクションボタンで作成される）
         try:
-            # カスタムアクションボタンでタグ付けするためのオブジェクトを事前作成
-            s3_client.put_object(Bucket=bucket_name, Key=revision_id, Body=b"")
-            logger.info(
-                "Pre-created S3 object for tagging",
-                extra={"bucket": bucket_name, "key": revision_id},
-            )
-
             deployment_info = get_deployment_info(service_arn, revision_arn)
             message = create_approval_message(
-                bucket_name=bucket_name,
-                revision_id=revision_id,
+                parameter_name=parameter_name,
                 service_arn=service_arn,
                 target_revision_arn=revision_arn,
                 deployment_info=deployment_info,
@@ -95,7 +97,7 @@ def handler(event: dict, context) -> dict:
             sns_client.publish(
                 TopicArn=os.environ["SNS_TOPIC_ARN"],
                 Message=json.dumps(message),
-                Subject="ECS Blue/Green Deployment - Approval Required",
+                Subject="ECS Blue/Green Deployment - 本番トラフィックの再ルーティング",
             )
 
             logger.info("Slack notification sent")
@@ -105,19 +107,21 @@ def handler(event: dict, context) -> dict:
 
         return hook_in_progress()
 
-    # 2回目以降: S3オブジェクトのタグを確認
-    approval_status = check_approval_tag(bucket_name, revision_id)
+    # 2回目以降: SSMパラメータの値を確認
+    approval_status = check_approval_status(parameter_name)
 
     if approval_status == "approved":
-        logger.info("Deployment approved via S3 tag")
+        logger.info("Deployment approved via SSM parameter")
+        delete_parameter(parameter_name)
         return hook_succeeded()
 
     if approval_status == "rejected":
-        logger.info("Deployment rejected via S3 tag")
+        logger.info("Deployment rejected via SSM parameter")
+        delete_parameter(parameter_name)
         return hook_failed()
 
     # まだ決定されていない → 再ポーリング
-    logger.info("No approval/rejection tag found, continuing to poll")
+    logger.info("No approval/rejection found, continuing to poll")
     return hook_in_progress()
 
 
@@ -137,19 +141,38 @@ def hook_in_progress() -> dict:
     }
 
 
-def check_approval_tag(bucket: str, key: str) -> str | None:
-    """S3オブジェクトのapproval-statusタグを確認"""
+def check_approval_status(parameter_name: str) -> str | None:
+    """SSMパラメータの値を確認（パラメータ未作成=未決定）"""
     try:
-        response = s3_client.get_object_tagging(Bucket=bucket, Key=key)
-        for tag in response.get("TagSet", []):
-            if tag["Key"] == "approval-status":
-                return tag["Value"]
+        response = ssm_client.get_parameter(Name=parameter_name)
+        value = response["Parameter"]["Value"]
+        if value in ("approved", "rejected"):
+            return value
         return None
-    except ClientError:
+    except ClientError as e:
+        if e.response["Error"]["Code"] == "ParameterNotFound":
+            logger.info(
+                "SSM parameter not yet created (awaiting user action)",
+                extra={"parameter_name": parameter_name},
+            )
+            return None
         logger.exception(
-            "Error checking S3 object tags", extra={"bucket": bucket, "key": key}
+            "Error checking SSM parameter",
+            extra={"parameter_name": parameter_name},
         )
         return None
+
+
+def delete_parameter(parameter_name: str) -> None:
+    """SSMパラメータを削除（クリーンアップ）"""
+    try:
+        ssm_client.delete_parameter(Name=parameter_name)
+        logger.info("Deleted SSM parameter", extra={"parameter_name": parameter_name})
+    except ClientError:
+        logger.exception(
+            "Failed to delete SSM parameter",
+            extra={"parameter_name": parameter_name},
+        )
 
 
 def get_deployment_info(service_arn: str, target_revision_arn: str) -> dict:

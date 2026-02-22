@@ -3,37 +3,30 @@ import { Construct } from "constructs";
 import * as path from "path";
 
 /**
- * ECS Blue/Green Deployment承認用Lambda（S3ポーリング方式）
+ * ECS Blue/Green Deployment承認用Lambda（SSM Parameter Storeポーリング方式）
  *
- * S3オブジェクトのタグを確認して承認/拒否を判定する。
- * - approval-status: approved → SUCCEEDED
- * - approval-status: rejected → FAILED
+ * SSM Parameterの値を確認して承認/拒否を判定する。
+ * - approved → SUCCEEDED
+ * - rejected → FAILED
  *
+ * パラメータ名: /ecs/<cluster>/<service>/ecs-native-blue-green-approval/<revisionId>
  * SNS Topic ARNはスタック側でaddEnvironment()で設定する。
  */
 export class ApprovalLambdaConstruct extends Construct {
   public readonly approvalFunction: cdk.aws_lambda.Function;
-  public readonly approvalBucket: cdk.aws_s3.Bucket;
 
   constructor(scope: Construct, id: string) {
     super(scope, id);
 
-    // S3バケット（承認/拒否オブジェクト用）
-    this.approvalBucket = new cdk.aws_s3.Bucket(this, "ApprovalBucket", {
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      autoDeleteObjects: true,
-      lifecycleRules: [{ expiration: cdk.Duration.days(7) }],
-      blockPublicAccess: cdk.aws_s3.BlockPublicAccess.BLOCK_ALL,
-      encryption: cdk.aws_s3.BucketEncryption.S3_MANAGED,
-    });
+    const region = cdk.Stack.of(this).region;
+    const account = cdk.Stack.of(this).account;
+    const ssmParameterArn = `arn:aws:ssm:${region}:${account}:parameter/ecs/*/*/ecs-native-blue-green-approval/*`;
 
     // Lambda Powertools Layer
     const powertoolsLayer = cdk.aws_lambda.LayerVersion.fromLayerVersionArn(
       this,
       "PowertoolsLayer",
-      `arn:aws:lambda:${
-        cdk.Stack.of(this).region
-      }:017000801446:layer:AWSLambdaPowertoolsPythonV3-python313-arm64:19`
+      `arn:aws:lambda:${region}:017000801446:layer:AWSLambdaPowertoolsPythonV3-python313-arm64:19`
     );
 
     // Lambda Function
@@ -51,7 +44,6 @@ export class ApprovalLambdaConstruct extends Construct {
         memorySize: 512,
         layers: [powertoolsLayer],
         environment: {
-          S3_BUCKET_NAME: this.approvalBucket.bucketName,
           POWERTOOLS_SERVICE_NAME: "ecs-blue-green-approval",
           POWERTOOLS_LOG_LEVEL: "INFO",
           LOG_LEVEL: "INFO",
@@ -59,13 +51,12 @@ export class ApprovalLambdaConstruct extends Construct {
       }
     );
 
-    // S3権限（オブジェクト事前作成 + タグ確認用）
-    this.approvalBucket.grantPut(this.approvalFunction);
+    // SSM Parameter Store権限（パラメータ作成・取得・削除用）
     this.approvalFunction.addToRolePolicy(
       new cdk.aws_iam.PolicyStatement({
         effect: cdk.aws_iam.Effect.ALLOW,
-        actions: ["s3:GetObjectTagging"],
-        resources: [this.approvalBucket.arnForObjects("*")],
+        actions: ["ssm:GetParameter", "ssm:DeleteParameter"],
+        resources: [ssmParameterArn],
       })
     );
 
