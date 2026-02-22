@@ -80,7 +80,17 @@ def handler(event: dict, context) -> dict:
         },
     )
 
-    # 初回呼び出し判定
+    # サービス初回デプロイ判定（デプロイメントが1つのみ = Blue環境なし）
+    response = ecs_client.describe_services(
+        cluster=cluster_name, services=[service_name]
+    )
+    if response["services"]:
+        deployments = response["services"][0].get("deployments", [])
+        if len(deployments) <= 1:
+            logger.info("Initial deployment detected, skipping approval")
+            return hook_succeeded()
+
+    # ライフサイクルフック初回呼び出し判定
     is_first_invocation = not hook_details.get("notificationSent", False)
 
     if is_first_invocation:

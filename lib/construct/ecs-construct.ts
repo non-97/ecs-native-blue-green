@@ -83,8 +83,7 @@ export class EcsConstruct extends Construct {
   ): cdk.aws_ecs.Cluster {
     return new cdk.aws_ecs.Cluster(this, "Cluster", {
       vpc: this.props.vpc,
-      containerInsightsV2: cdk.aws_ecs.ContainerInsights.DISABLED,
-      // containerInsightsV2: cdk.aws_ecs.ContainerInsights.ENHANCED,
+      containerInsightsV2: cdk.aws_ecs.ContainerInsights.ENHANCED,
       executeCommandConfiguration: {
         logConfiguration: {
           s3Bucket: execLogBucket,
@@ -506,8 +505,7 @@ export class EcsConstruct extends Construct {
     return new cdk.aws_ecs.FargateService(this, "Service", {
       cluster: this.cluster,
       taskDefinition: this.taskDefinition,
-      desiredCount: 1,
-      // desiredCount: 2,
+      desiredCount: 2,
       minHealthyPercent: 100,
       maxHealthyPercent: 200,
       deploymentStrategy: cdk.aws_ecs.DeploymentStrategy.BLUE_GREEN,

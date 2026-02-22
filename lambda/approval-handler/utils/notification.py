@@ -35,7 +35,7 @@ def create_approval_message(
         f"選択は *24時間以内* に行う必要があります。24時間以内に再ルーティングしない場合は *自動でロールバック* が開始されます。\n\n"
         f"---\n"
         f"ref : \n"
-        f"- <https://docs.aws.amazon.com/ja_jp/AmazonECS/latest/developerguide/blue-green-deployment-how-it-works.html|Amazon ECS ブルー/グリーンサービスのデプロイワークフロー - Amazon Elastic Container Service>"
+        f"- <https://docs.aws.amazon.com/ja_jp/AmazonECS/latest/developerguide/blue-green-deployment-how-it-works.html|Amazon ECS ブルー/グリーンサービスのデプロイワークフロー - Amazon Elastic Container Service>\n"
         f"- <https://docs.aws.amazon.com/ja_jp/AmazonECS/latest/developerguide/deployment-lifecycle-hooks.html|Amazon ECS サービスデプロイのライフサイクルフック - Amazon Elastic Container Service>"
     )
 
