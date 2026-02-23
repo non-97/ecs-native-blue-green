@@ -41,6 +41,7 @@ export interface EcsConstructProps {
     securityGroup: cdk.aws_ec2.ISecurityGroup;
   };
   enableApplicationSignals?: boolean;
+  approvalFunction?: cdk.aws_lambda.IFunction;
 }
 
 export class EcsConstruct extends Construct {
@@ -559,5 +560,20 @@ export class EcsConstruct extends Construct {
       }),
     });
     target.attachToApplicationTargetGroup(this.props.tg1);
+
+    // Lifecycle Hook追加（承認関数が指定されている場合）
+    if (this.props.approvalFunction) {
+      service.addLifecycleHook(
+        new cdk.aws_ecs.DeploymentLifecycleLambdaTarget(
+          this.props.approvalFunction,
+          "PostTestTrafficShiftHook",
+          {
+            lifecycleStages: [
+              cdk.aws_ecs.DeploymentLifecycleStage.POST_TEST_TRAFFIC_SHIFT,
+            ],
+          }
+        )
+      );
+    }
   }
 }

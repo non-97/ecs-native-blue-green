@@ -7,13 +7,21 @@ import { FirelensConstruct } from "./construct/firelens-construct";
 import { EcsConstruct } from "./construct/ecs-construct";
 import { AuroraConstruct } from "./construct/aurora-construct";
 import { ValkeyConstruct } from "./construct/valkey-construct";
+import { ApprovalLambdaConstruct } from "./construct/approval-lambda-construct";
+import { QDeveloperChatConstruct } from "./construct/q-developer-chat-construct";
+
+export interface EcsNativeBlueGreenStackProps extends cdk.StackProps {
+  slackWorkspaceId: string;
+  slackChannelId: string;
+}
 
 export class EcsNativeBlueGreenStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(
+    scope: Construct,
+    id: string,
+    props: EcsNativeBlueGreenStackProps
+  ) {
     super(scope, id, props);
-
-    // Application Signals Discovery（アカウントで1回）
-    new applicationsignals.CfnDiscovery(this, "ApplicationSignalsDiscovery", {});
 
     const vpcConstruct = new VpcConstruct(this, "VpcConstruct");
 
@@ -32,6 +40,27 @@ export class EcsNativeBlueGreenStack extends cdk.Stack {
       vpc: vpcConstruct.vpc,
     });
     const firelensConstruct = new FirelensConstruct(this, "FirelensConstruct");
+
+    // Approval Lambda Construct
+    const approvalLambda = new ApprovalLambdaConstruct(this, "ApprovalLambda");
+
+    // Q Developer Chat Construct
+    const qDeveloperChat = new QDeveloperChatConstruct(this, "QDeveloperChat", {
+      slackWorkspaceId: props.slackWorkspaceId,
+      slackChannelId: props.slackChannelId,
+    });
+
+    // LambdaにSNS Topic publish権限を付与
+    qDeveloperChat.notificationTopic.grantPublish(
+      approvalLambda.approvalFunction
+    );
+
+    // Lambda環境変数にSNS Topic ARNを設定
+    approvalLambda.approvalFunction.addEnvironment(
+      "SNS_TOPIC_ARN",
+      qDeveloperChat.notificationTopic.topicArn
+    );
+
     const ecsConstruct = new EcsConstruct(this, "EcsConstruct", {
       vpc: vpcConstruct.vpc,
       alb: albConstruct.alb,
@@ -58,6 +87,7 @@ export class EcsNativeBlueGreenStack extends cdk.Stack {
       },
       // Application Signals有効化
       enableApplicationSignals: true,
+      approvalFunction: approvalLambda.approvalFunction,
     });
   }
 }

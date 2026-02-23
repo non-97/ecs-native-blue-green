@@ -7,4 +7,10 @@ node_modules
 .cdk.staging
 cdk.out
 
-.serena
+# 機密情報
+.env
+.env.local
+cdk.context.json
+
+# Serena
+.serena/
