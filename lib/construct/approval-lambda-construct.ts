@@ -3,14 +3,22 @@ import { Construct } from "constructs";
 import * as path from "path";
 
 /**
- * ECS Blue/Green Deployment承認用Lambda（SSM Parameter Storeポーリング方式）
+ * ECS Blue/Green Deployment ライフサイクルフック用Lambda
  *
- * SSM Parameterの値を確認して承認/拒否を判定する。
- * - approved → SUCCEEDED
- * - rejected → FAILED
+ * POST_TEST_TRAFFIC_SHIFT フックから呼び出され、以下の処理を行う:
+ *
+ * 1. 初回デプロイ(Blue環境なし)の場合は即SUCCEEDED
+ * 2. フック初回呼び出し時にSNS経由でSlack通知を送信
+ * 3. 2回目以降はSSM Parameterの値をポーリングして承認/拒否を判定
+ *    - approved → SUCCEEDED(本番トラフィックを再ルーティング)
+ *    - rejected → FAILED(ロールバック)
+ * 4. 承認/拒否確定後にSSMパラメータを削除(クリーンアップ)
+ *
+ * SSMパラメータはカスタムアクションボタン(Amazon Q Developer in chat applications)の
+ * CLIコマンドで作成されるため、Lambda側では事前作成しない。
  *
  * パラメータ名: /ecs/<cluster>/<service>/ecs-native-blue-green-approval/<revisionId>
- * SNS Topic ARNはスタック側でaddEnvironment()で設定する。
+ * SNS Topic ARNはスタック側でaddEnvironment()により環境変数に設定する。
  */
 export class ApprovalLambdaConstruct extends Construct {
   public readonly approvalFunction: cdk.aws_lambda.Function;
@@ -20,16 +28,19 @@ export class ApprovalLambdaConstruct extends Construct {
 
     const region = cdk.Stack.of(this).region;
     const account = cdk.Stack.of(this).account;
+
+    // SSMパラメータのARNパターン
+    // ワイルドカードでクラスター名/サービス名/リビジョンIDを許可
     const ssmParameterArn = `arn:aws:ssm:${region}:${account}:parameter/ecs/*/*/ecs-native-blue-green-approval/*`;
 
-    // Lambda Powertools Layer
+    // Lambda Powertools Layer (Python 3.13 ARM64)
     const powertoolsLayer = cdk.aws_lambda.LayerVersion.fromLayerVersionArn(
       this,
       "PowertoolsLayer",
       `arn:aws:lambda:${region}:017000801446:layer:AWSLambdaPowertoolsPythonV3-python313-arm64:19`
     );
 
-    // Lambda Function
+    // ライフサイクルフックハンドラLambda
     this.approvalFunction = new cdk.aws_lambda.Function(
       this,
       "ApprovalFunction",
@@ -40,7 +51,7 @@ export class ApprovalLambdaConstruct extends Construct {
           path.join(__dirname, "../../lambda/approval-handler")
         ),
         architecture: cdk.aws_lambda.Architecture.ARM_64,
-        timeout: cdk.Duration.minutes(15),
+        timeout: cdk.Duration.seconds(30),
         memorySize: 512,
         layers: [powertoolsLayer],
         environment: {
@@ -51,7 +62,9 @@ export class ApprovalLambdaConstruct extends Construct {
       }
     );
 
-    // SSM Parameter Store権限（パラメータ作成・取得・削除用）
+    // SSM Parameter Store権限
+    // GetParameter: 承認ステータスのポーリング用
+    // DeleteParameter: 承認/拒否確定後のクリーンアップ用
     this.approvalFunction.addToRolePolicy(
       new cdk.aws_iam.PolicyStatement({
         effect: cdk.aws_iam.Effect.ALLOW,
@@ -60,11 +73,13 @@ export class ApprovalLambdaConstruct extends Construct {
       })
     );
 
-    // ECS読み取り権限（サービス情報取得用）
+    // ECS読み取り権限
+    // DescribeServices: 初回デプロイ判定 + ベイクタイム取得
+    // ListServiceDeployments: サービスデプロイメントID取得(コンソールURL構築用)
     this.approvalFunction.addToRolePolicy(
       new cdk.aws_iam.PolicyStatement({
         effect: cdk.aws_iam.Effect.ALLOW,
-        actions: ["ecs:DescribeServices", "ecs:DescribeTaskDefinition"],
+        actions: ["ecs:DescribeServices", "ecs:ListServiceDeployments"],
         resources: ["*"],
       })
     );
