@@ -41,12 +41,12 @@ export interface EcsConstructProps {
     securityGroup: cdk.aws_ec2.ISecurityGroup;
   };
   enableApplicationSignals?: boolean;
-  approvalFunction?: cdk.aws_lambda.IFunction;
 }
 
 export class EcsConstruct extends Construct {
+  public readonly cluster: cdk.aws_ecs.Cluster;
+  public readonly service: cdk.aws_ecs.FargateService;
   private readonly props: EcsConstructProps;
-  private readonly cluster: cdk.aws_ecs.Cluster;
   private readonly taskDefinition: cdk.aws_ecs.FargateTaskDefinition;
 
   constructor(scope: Construct, id: string, props: EcsConstructProps) {
@@ -73,9 +73,10 @@ export class EcsConstruct extends Construct {
     ecsExecLogBucketConstruct.bucket.grantPut(this.taskDefinition.taskRole);
 
     // ECS Service
-    const service = this.createService();
-    this.setupConnections(service);
-    this.setupLoadBalancerTarget(service, webContainer);
+    this.service = this.createService();
+    this.setupConnections(this.service);
+    this.setupLoadBalancerTarget(this.service, webContainer);
+    this.setupPauseLifecycleHook(this.service);
   }
 
   private createCluster(
@@ -560,20 +561,24 @@ export class EcsConstruct extends Construct {
       }),
     });
     target.attachToApplicationTargetGroup(this.props.tg1);
+  }
 
-    // Lifecycle Hook追加（承認関数が指定されている場合）
-    if (this.props.approvalFunction) {
-      service.addLifecycleHook(
-        new cdk.aws_ecs.DeploymentLifecycleLambdaTarget(
-          this.props.approvalFunction,
-          "PostTestTrafficShiftHook",
-          {
-            lifecycleStages: [
-              cdk.aws_ecs.DeploymentLifecycleStage.POST_TEST_TRAFFIC_SHIFT,
-            ],
-          }
-        )
-      );
-    }
+  /**
+   * POST_TEST_TRAFFIC_SHIFT に PAUSE 型のライフサイクルフックを設定する。
+   * CDK L2 (`addLifecycleHook`) は Lambda target のみ対応のため、
+   * L1 (`CfnService`) の `DeploymentConfiguration.LifecycleHooks` に直接プロパティを注入する。
+   */
+  private setupPauseLifecycleHook(service: cdk.aws_ecs.FargateService): void {
+    const cfnService = service.node.defaultChild as cdk.aws_ecs.CfnService;
+    cfnService.addPropertyOverride("DeploymentConfiguration.LifecycleHooks", [
+      {
+        TargetType: "PAUSE",
+        LifecycleStages: ["POST_TEST_TRAFFIC_SHIFT"],
+        TimeoutConfiguration: {
+          TimeoutInMinutes: 1440, // 1日
+          Action: "ROLLBACK",
+        },
+      },
+    ]);
   }
 }

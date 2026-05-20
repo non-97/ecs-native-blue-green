@@ -1,5 +1,4 @@
 import * as cdk from "aws-cdk-lib/core";
-import { aws_applicationsignals as applicationsignals } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import { VpcConstruct } from "./construct/vpc-construct";
 import { AlbConstruct } from "./construct/alb-construct";
@@ -7,8 +6,8 @@ import { FirelensConstruct } from "./construct/firelens-construct";
 import { EcsConstruct } from "./construct/ecs-construct";
 import { AuroraConstruct } from "./construct/aurora-construct";
 import { ValkeyConstruct } from "./construct/valkey-construct";
-import { ApprovalLambdaConstruct } from "./construct/approval-lambda-construct";
 import { QDeveloperChatConstruct } from "./construct/q-developer-chat-construct";
+import { DeploymentNotificationConstruct } from "./construct/deployment-notification-construct";
 
 export interface EcsNativeBlueGreenStackProps extends cdk.StackProps {
   slackWorkspaceId: string;
@@ -41,26 +40,6 @@ export class EcsNativeBlueGreenStack extends cdk.Stack {
     });
     const firelensConstruct = new FirelensConstruct(this, "FirelensConstruct");
 
-    // Approval Lambda Construct
-    const approvalLambda = new ApprovalLambdaConstruct(this, "ApprovalLambda");
-
-    // Q Developer Chat Construct
-    const qDeveloperChat = new QDeveloperChatConstruct(this, "QDeveloperChat", {
-      slackWorkspaceId: props.slackWorkspaceId,
-      slackChannelId: props.slackChannelId,
-    });
-
-    // LambdaにSNS Topic publish権限を付与
-    qDeveloperChat.notificationTopic.grantPublish(
-      approvalLambda.approvalFunction
-    );
-
-    // Lambda環境変数にSNS Topic ARNを設定
-    approvalLambda.approvalFunction.addEnvironment(
-      "SNS_TOPIC_ARN",
-      qDeveloperChat.notificationTopic.topicArn
-    );
-
     const ecsConstruct = new EcsConstruct(this, "EcsConstruct", {
       vpc: vpcConstruct.vpc,
       alb: albConstruct.alb,
@@ -87,7 +66,27 @@ export class EcsNativeBlueGreenStack extends cdk.Stack {
       },
       // Application Signals有効化
       enableApplicationSignals: true,
-      approvalFunction: approvalLambda.approvalFunction,
+    });
+
+    // PAUSE ライフサイクルフックの通知パイプライン
+    // EventBridge → Step Functions (JSONata) → SNS
+    const deploymentNotification = new DeploymentNotificationConstruct(
+      this,
+      "DeploymentNotification",
+      {
+        cluster: ecsConstruct.cluster,
+      }
+    );
+
+    // Service が POST_TEST_TRAFFIC_SHIFT で PAUSE した時に Rule が既に存在するよう、
+    // Service より先に通知パイプラインを完成させる
+    ecsConstruct.service.node.addDependency(deploymentNotification);
+
+    // Slack 通知 + 承認ボタン (Amazon Q Developer in chat applications)
+    new QDeveloperChatConstruct(this, "QDeveloperChat", {
+      slackWorkspaceId: props.slackWorkspaceId,
+      slackChannelId: props.slackChannelId,
+      notificationTopic: deploymentNotification.notificationTopic,
     });
   }
 }
