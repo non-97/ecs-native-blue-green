@@ -1,0 +1,3453 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Snapshot CloudFormation テンプレートが既存スナップショットと一致する 1`] = `
+{
+  "Mappings": {
+    "awscdkawskinesisfirehoseCidrBlocks": {
+      "af-south-1": {
+        "FirehoseCidrBlock": "13.244.121.224/27",
+      },
+      "ap-east-1": {
+        "FirehoseCidrBlock": "18.162.221.32/27",
+      },
+      "ap-east-2": {
+        "FirehoseCidrBlock": "43.212.53.160/27",
+      },
+      "ap-northeast-1": {
+        "FirehoseCidrBlock": "13.113.196.224/27",
+      },
+      "ap-northeast-2": {
+        "FirehoseCidrBlock": "13.209.1.64/27",
+      },
+      "ap-northeast-3": {
+        "FirehoseCidrBlock": "13.208.177.192/27",
+      },
+      "ap-south-1": {
+        "FirehoseCidrBlock": "13.232.67.32/27",
+      },
+      "ap-south-2": {
+        "FirehoseCidrBlock": "18.60.192.128/27",
+      },
+      "ap-southeast-1": {
+        "FirehoseCidrBlock": "13.228.64.192/27",
+      },
+      "ap-southeast-2": {
+        "FirehoseCidrBlock": "13.210.67.224/27",
+      },
+      "ap-southeast-3": {
+        "FirehoseCidrBlock": "108.136.221.64/27",
+      },
+      "ap-southeast-4": {
+        "FirehoseCidrBlock": "16.50.161.128/27",
+      },
+      "ap-southeast-5": {
+        "FirehoseCidrBlock": "43.216.58.0/27",
+      },
+      "ap-southeast-7": {
+        "FirehoseCidrBlock": "43.208.112.96/27",
+      },
+      "ca-central-1": {
+        "FirehoseCidrBlock": "35.183.92.128/27",
+      },
+      "ca-west-1": {
+        "FirehoseCidrBlock": "40.176.98.192/27",
+      },
+      "cn-north-1": {
+        "FirehoseCidrBlock": "52.81.151.32/27",
+      },
+      "cn-northwest-1": {
+        "FirehoseCidrBlock": "161.189.23.64/27",
+      },
+      "eu-central-1": {
+        "FirehoseCidrBlock": "35.158.127.160/27",
+      },
+      "eu-central-2": {
+        "FirehoseCidrBlock": "16.62.183.32/27",
+      },
+      "eu-north-1": {
+        "FirehoseCidrBlock": "13.53.63.224/27",
+      },
+      "eu-south-1": {
+        "FirehoseCidrBlock": "15.161.135.128/27",
+      },
+      "eu-south-2": {
+        "FirehoseCidrBlock": "18.100.71.96/27",
+      },
+      "eu-west-1": {
+        "FirehoseCidrBlock": "52.19.239.192/27",
+      },
+      "eu-west-2": {
+        "FirehoseCidrBlock": "18.130.1.96/27",
+      },
+      "eu-west-3": {
+        "FirehoseCidrBlock": "35.180.1.96/27",
+      },
+      "il-central-1": {
+        "FirehoseCidrBlock": "51.16.102.0/27",
+      },
+      "me-central-1": {
+        "FirehoseCidrBlock": "3.28.159.32/27",
+      },
+      "me-south-1": {
+        "FirehoseCidrBlock": "15.185.91.0/27",
+      },
+      "sa-east-1": {
+        "FirehoseCidrBlock": "18.228.1.128/27",
+      },
+      "us-east-1": {
+        "FirehoseCidrBlock": "52.70.63.192/27",
+      },
+      "us-east-2": {
+        "FirehoseCidrBlock": "13.58.135.96/27",
+      },
+      "us-gov-east-1": {
+        "FirehoseCidrBlock": "18.253.138.96/27",
+      },
+      "us-gov-west-1": {
+        "FirehoseCidrBlock": "52.61.204.160/27",
+      },
+      "us-west-1": {
+        "FirehoseCidrBlock": "13.57.135.192/27",
+      },
+      "us-west-2": {
+        "FirehoseCidrBlock": "52.89.255.224/27",
+      },
+    },
+  },
+  "Parameters": {
+    "BootstrapVersion": {
+      "Default": "/cdk-bootstrap/hnb659fds/version",
+      "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "AlbConstructF9C2F654": {
+      "DependsOn": [
+        "VpcConstructPublicSubnet1DefaultRouteA69991A8",
+        "VpcConstructPublicSubnet1RouteTableAssociation0560873B",
+        "VpcConstructPublicSubnet2DefaultRoute1723E0EA",
+        "VpcConstructPublicSubnet2RouteTableAssociation33B277B8",
+      ],
+      "Properties": {
+        "LoadBalancerAttributes": [
+          {
+            "Key": "deletion_protection.enabled",
+            "Value": "false",
+          },
+        ],
+        "Scheme": "internet-facing",
+        "SecurityGroups": [
+          {
+            "Fn::GetAtt": [
+              "AlbConstructSecurityGroup6F1A15B1",
+              "GroupId",
+            ],
+          },
+        ],
+        "Subnets": [
+          {
+            "Ref": "VpcConstructPublicSubnet1Subnet3C67D61F",
+          },
+          {
+            "Ref": "VpcConstructPublicSubnet2SubnetECF28079",
+          },
+        ],
+        "Type": "application",
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+    },
+    "AlbConstructListener51963EA1": {
+      "Properties": {
+        "DefaultActions": [
+          {
+            "TargetGroupArn": {
+              "Ref": "AlbConstructTg1B21A2889",
+            },
+            "Type": "forward",
+          },
+        ],
+        "LoadBalancerArn": {
+          "Ref": "AlbConstructF9C2F654",
+        },
+        "Port": 80,
+        "Protocol": "HTTP",
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+    },
+    "AlbConstructListenerRule8DC40070": {
+      "Properties": {
+        "Actions": [
+          {
+            "TargetGroupArn": {
+              "Ref": "AlbConstructTg1B21A2889",
+            },
+            "Type": "forward",
+          },
+        ],
+        "Conditions": [
+          {
+            "Field": "path-pattern",
+            "PathPatternConfig": {
+              "Values": [
+                "*",
+              ],
+            },
+          },
+        ],
+        "ListenerArn": {
+          "Ref": "AlbConstructListener51963EA1",
+        },
+        "Priority": 1,
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::ListenerRule",
+    },
+    "AlbConstructSecurityGroup6F1A15B1": {
+      "Properties": {
+        "GroupDescription": "Automatically created Security Group for ELB EcsNativeBlueGreenStackAlbConstruct8D7A40F9",
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow from anyone on port 80",
+            "FromPort": 80,
+            "IpProtocol": "tcp",
+            "ToPort": 80,
+          },
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow from anyone on port 10080",
+            "FromPort": 10080,
+            "IpProtocol": "tcp",
+            "ToPort": 10080,
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcConstructEA197461",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "AlbConstructSecurityGrouptoEcsNativeBlueGreenStackEcsConstructServiceSecurityGroup5943E80A80A7D05CEA": {
+      "Properties": {
+        "Description": "to EcsNativeBlueGreenStackEcsConstructServiceSecurityGroup5943E80A:80",
+        "DestinationSecurityGroupId": {
+          "Fn::GetAtt": [
+            "EcsConstructServiceSecurityGroup9E2F9E78",
+            "GroupId",
+          ],
+        },
+        "FromPort": 80,
+        "GroupId": {
+          "Fn::GetAtt": [
+            "AlbConstructSecurityGroup6F1A15B1",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "tcp",
+        "ToPort": 80,
+      },
+      "Type": "AWS::EC2::SecurityGroupEgress",
+    },
+    "AlbConstructTestListener8DA8248D": {
+      "Properties": {
+        "DefaultActions": [
+          {
+            "TargetGroupArn": {
+              "Ref": "AlbConstructTg2AFED7D09",
+            },
+            "Type": "forward",
+          },
+        ],
+        "LoadBalancerArn": {
+          "Ref": "AlbConstructF9C2F654",
+        },
+        "Port": 10080,
+        "Protocol": "HTTP",
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+    },
+    "AlbConstructTestListenerRule172B8EC4": {
+      "Properties": {
+        "Actions": [
+          {
+            "TargetGroupArn": {
+              "Ref": "AlbConstructTg2AFED7D09",
+            },
+            "Type": "forward",
+          },
+        ],
+        "Conditions": [
+          {
+            "Field": "path-pattern",
+            "PathPatternConfig": {
+              "Values": [
+                "*",
+              ],
+            },
+          },
+        ],
+        "ListenerArn": {
+          "Ref": "AlbConstructTestListener8DA8248D",
+        },
+        "Priority": 1,
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::ListenerRule",
+    },
+    "AlbConstructTg1B21A2889": {
+      "Properties": {
+        "HealthCheckIntervalSeconds": 5,
+        "HealthCheckPath": "/",
+        "HealthCheckPort": "80",
+        "HealthCheckProtocol": "HTTP",
+        "HealthCheckTimeoutSeconds": 3,
+        "HealthyThresholdCount": 2,
+        "Port": 80,
+        "Protocol": "HTTP",
+        "TargetGroupAttributes": [
+          {
+            "Key": "deregistration_delay.timeout_seconds",
+            "Value": "5",
+          },
+          {
+            "Key": "stickiness.enabled",
+            "Value": "false",
+          },
+        ],
+        "TargetType": "ip",
+        "VpcId": {
+          "Ref": "VpcConstructEA197461",
+        },
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+    },
+    "AlbConstructTg2AFED7D09": {
+      "Properties": {
+        "HealthCheckIntervalSeconds": 5,
+        "HealthCheckPath": "/",
+        "HealthCheckPort": "80",
+        "HealthCheckProtocol": "HTTP",
+        "HealthCheckTimeoutSeconds": 3,
+        "HealthyThresholdCount": 2,
+        "Port": 80,
+        "Protocol": "HTTP",
+        "TargetGroupAttributes": [
+          {
+            "Key": "deregistration_delay.timeout_seconds",
+            "Value": "5",
+          },
+          {
+            "Key": "stickiness.enabled",
+            "Value": "false",
+          },
+        ],
+        "TargetType": "ip",
+        "VpcId": {
+          "Ref": "VpcConstructEA197461",
+        },
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+    },
+    "AuroraConstructClusterCC23F2F1": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "CopyTagsToSnapshot": true,
+        "DBClusterParameterGroupName": "default.aurora-postgresql16",
+        "DBSubnetGroupName": {
+          "Ref": "AuroraConstructClusterSubnetsBC9598B8",
+        },
+        "DatabaseName": "appdb",
+        "DeletionProtection": false,
+        "Engine": "aurora-postgresql",
+        "EngineVersion": "16.8",
+        "MasterUserPassword": {
+          "Fn::Join": [
+            "",
+            [
+              "{{resolve:secretsmanager:",
+              {
+                "Ref": "EcsNativeBlueGreenStackAuroraConstructClusterSecret09BAD1973fdaad7efa858a3daf9490cf0a702aeb",
+              },
+              ":SecretString:password::}}",
+            ],
+          ],
+        },
+        "MasterUsername": "clusteradmin",
+        "Port": 5432,
+        "ServerlessV2ScalingConfiguration": {
+          "MaxCapacity": 1,
+          "MinCapacity": 0,
+        },
+        "StorageEncrypted": true,
+        "VpcSecurityGroupIds": [
+          {
+            "Fn::GetAtt": [
+              "AuroraConstructClusterSecurityGroup348F7B47",
+              "GroupId",
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::RDS::DBCluster",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AuroraConstructClusterSecretAttachment1F98DBD4": {
+      "Properties": {
+        "SecretId": {
+          "Ref": "EcsNativeBlueGreenStackAuroraConstructClusterSecret09BAD1973fdaad7efa858a3daf9490cf0a702aeb",
+        },
+        "TargetId": {
+          "Ref": "AuroraConstructClusterCC23F2F1",
+        },
+        "TargetType": "AWS::RDS::DBCluster",
+      },
+      "Type": "AWS::SecretsManager::SecretTargetAttachment",
+    },
+    "AuroraConstructClusterSecurityGroup348F7B47": {
+      "Properties": {
+        "GroupDescription": "RDS security group",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcConstructEA197461",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "AuroraConstructClusterSecurityGroupfromEcsNativeBlueGreenStackEcsConstructServiceSecurityGroup5943E80A54324BC817C0": {
+      "Properties": {
+        "Description": "Allow ECS to Aurora PostgreSQL",
+        "FromPort": 5432,
+        "GroupId": {
+          "Fn::GetAtt": [
+            "AuroraConstructClusterSecurityGroup348F7B47",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "EcsConstructServiceSecurityGroup9E2F9E78",
+            "GroupId",
+          ],
+        },
+        "ToPort": 5432,
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
+    },
+    "AuroraConstructClusterSubnetsBC9598B8": {
+      "Properties": {
+        "DBSubnetGroupDescription": "Subnets for Cluster database",
+        "SubnetIds": [
+          {
+            "Ref": "VpcConstructIsolatedSubnet1SubnetA4D14A84",
+          },
+          {
+            "Ref": "VpcConstructIsolatedSubnet2Subnet9E0818DE",
+          },
+        ],
+      },
+      "Type": "AWS::RDS::DBSubnetGroup",
+    },
+    "AuroraConstructClusterwriterF059A093": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "VpcConstructIsolatedSubnet1RouteTableAssociation315DE7BA",
+        "VpcConstructIsolatedSubnet2RouteTableAssociation394B080E",
+      ],
+      "Properties": {
+        "DBClusterIdentifier": {
+          "Ref": "AuroraConstructClusterCC23F2F1",
+        },
+        "DBInstanceClass": "db.serverless",
+        "Engine": "aurora-postgresql",
+        "PromotionTier": 0,
+        "PubliclyAccessible": false,
+      },
+      "Type": "AWS::RDS::DBInstance",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C81C01536": {
+      "DependsOn": [
+        "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRoleDefaultPolicy88902FDF",
+        "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRole89A01265",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "3423a042b818e31c1e34a19d6689ab2e5f9b70fcbe9e71df66f241b20a200bd9.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "AWS_CA_BUNDLE": "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",
+          },
+        },
+        "Handler": "index.handler",
+        "Layers": [
+          {
+            "Ref": "FirelensConstructFireLensConfDeploymentAwsCliLayerC999920F",
+          },
+        ],
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRole89A01265",
+            "Arn",
+          ],
+        },
+        "Runtime": "python3.13",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CLogGroup817B64E9": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C81C01536",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 731,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRole89A01265": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRoleDefaultPolicy88902FDF": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetBucket*",
+                "s3:GetObject*",
+                "s3:List*",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::",
+                      {
+                        "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::",
+                      {
+                        "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+                      },
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "s3:Abort*",
+                "s3:DeleteObject*",
+                "s3:GetBucket*",
+                "s3:GetObject*",
+                "s3:List*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "FirelensConstructFireLensConfBucket0FDA45CF",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "FirelensConstructFireLensConfBucket0FDA45CF",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRoleDefaultPolicy88902FDF",
+        "Roles": [
+          {
+            "Ref": "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRole89A01265",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F": {
+      "DependsOn": [
+        "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6.zip",
+        },
+        "Description": {
+          "Fn::Join": [
+            "",
+            [
+              "Lambda function for auto-deleting objects in ",
+              {
+                "Ref": "FirelensConstructFireLensConfBucket0FDA45CF",
+              },
+              " S3 bucket.",
+            ],
+          ],
+        },
+        "Handler": "index.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs22.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomVpcRestrictDefaultSGCustomResourceProviderHandlerDC833E5E": {
+      "DependsOn": [
+        "CustomVpcRestrictDefaultSGCustomResourceProviderRole26592FE0",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "7fa1e366ee8a9ded01fc355f704cff92bfd179574e6f9cfee800a3541df1b200.zip",
+        },
+        "Description": "Lambda function for removing all inbound/outbound rules from the VPC default security group",
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomVpcRestrictDefaultSGCustomResourceProviderRole26592FE0",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs22.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomVpcRestrictDefaultSGCustomResourceProviderRole26592FE0": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ec2:AuthorizeSecurityGroupIngress",
+                    "ec2:AuthorizeSecurityGroupEgress",
+                    "ec2:RevokeSecurityGroupIngress",
+                    "ec2:RevokeSecurityGroupEgress",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":ec2:",
+                          {
+                            "Ref": "AWS::Region",
+                          },
+                          ":",
+                          {
+                            "Ref": "AWS::AccountId",
+                          },
+                          ":security-group/",
+                          {
+                            "Fn::GetAtt": [
+                              "VpcConstructEA197461",
+                              "DefaultSecurityGroup",
+                            ],
+                          },
+                        ],
+                      ],
+                    },
+                  ],
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "DeploymentNotificationHookAwaitingActionRule1B36A316": {
+      "Properties": {
+        "EventPattern": {
+          "detail": {
+            "clusterArn": [
+              {
+                "Fn::GetAtt": [
+                  "EcsConstructCluster14AE103B",
+                  "Arn",
+                ],
+              },
+            ],
+            "eventName": [
+              "HOOK_AWAITING_ACTION",
+            ],
+            "hookType": [
+              "PAUSE",
+            ],
+            "serviceArn": [
+              {
+                "Ref": "EcsConstructServiceC04CE253",
+              },
+            ],
+          },
+          "detail-type": [
+            "ECS Hook State Change",
+          ],
+          "source": [
+            "aws.ecs",
+          ],
+        },
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Ref": "DeploymentNotificationStateMachineD56B4C1F",
+            },
+            "Id": "Target0",
+            "RoleArn": {
+              "Fn::GetAtt": [
+                "DeploymentNotificationStateMachineEventsRoleA4F4DDC7",
+                "Arn",
+              ],
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "DeploymentNotificationStateMachineD56B4C1F": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "DeploymentNotificationStateMachineRoleDefaultPolicy4D0CBE91",
+        "DeploymentNotificationStateMachineRole7FB231F0",
+      ],
+      "Properties": {
+        "DefinitionString": {
+          "Fn::Join": [
+            "",
+            [
+              "{"StartAt":"ParseArns","States":{"ParseArns":{"Type":"Pass","QueryLanguage":"JSONata","Next":"DescribeServices","Assign":{"region":"{% $states.input.region %}","account":"{% $states.input.account %}","hookId":"{% $states.input.detail.hookId %}","serviceDeploymentArn":"{% $states.input.detail.serviceDeploymentArn %}","clusterName":"{% $split($states.input.detail.clusterArn, '/')[1] %}","serviceName":"{% $split($states.input.detail.serviceArn, '/')[2] %}","deploymentId":"{% $split($states.input.detail.serviceDeploymentArn, '/')[3] %}"}},"DescribeServices":{"QueryLanguage":"JSONata","Next":"DescribeServiceDeployments","Retry":[{"ErrorEquals":["States.ALL"],"IntervalSeconds":2,"MaxAttempts":3,"BackoffRate":2}],"Type":"Task","Arguments":{"Cluster":"{% $clusterName %}","Services":["{% $serviceName %}"]},"Assign":{"bakeTimeInMinutes":"{% $states.result.Services[0].DeploymentConfiguration.BakeTimeInMinutes %}","timeoutInMinutes":"{% ($states.result.Services[0].DeploymentConfiguration.LifecycleHooks[TargetType='PAUSE' and 'POST_TEST_TRAFFIC_SHIFT' in LifecycleStages].TimeoutConfiguration.TimeoutInMinutes)[0] %}"},"Resource":"arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":states:::aws-sdk:ecs:describeServices"},"DescribeServiceDeployments":{"QueryLanguage":"JSONata","Next":"BuildMessage","Retry":[{"ErrorEquals":["States.ALL"],"IntervalSeconds":2,"MaxAttempts":3,"BackoffRate":2}],"Type":"Task","Arguments":{"ServiceDeploymentArns":["{% $serviceDeploymentArn %}"]},"Assign":{"revisionId":"{% $split($states.result.ServiceDeployments[0].TargetServiceRevision.Arn, '/')[3] %}"},"Resource":"arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":states:::aws-sdk:ecs:describeServiceDeployments"},"BuildMessage":{"Type":"Pass","QueryLanguage":"JSONata","Next":"Publish","Assign":{"snsMessage":"{% $string({\\n      \\"version\\": \\"1.0\\",\\n      \\"source\\": \\"custom\\",\\n      \\"content\\": {\\n        \\"textType\\": \\"client-markdown\\",\\n        \\"title\\": \\":rocket: ECS Blue/Green Deployment - 本番トラフィックの再ルーティング承認依頼\\",\\n        \\"description\\": '@channel\\\\n\\\\n' & '- *Account* : \`' & $account & '\`\\\\n' & '- *Region* : \`' & $region & '\`\\\\n' & '- *ECS Cluster* : \`' & $clusterName & '\`\\\\n' & '- *ECS Service* : \`' & $serviceName & '\`\\\\n' & '- *Service Revision ID* : \`' & $revisionId & '\`\\\\n' & '- *Service Deployment ID* : \`' & $deploymentId & '\`\\\\n' & '- *Service Deployment URL* : https://' & $region & '.console.aws.amazon.com/ecs/v2/clusters/' & $clusterName & '/services/' & $serviceName & '/service-deployments/' & $deploymentId & '?region=' & $region & '\\\\n' & '- *Bake Time* : \`' & $string($bakeTimeInMinutes) & ' 分\`\\\\n' & '- *Timeout* : \`' & $string($timeoutInMinutes) & ' 分\`\\\\n\\\\n' & '---\\\\n' & 'テストトラフィックが新しいリビジョンのタスクに正常に再ルーティングされました。\\\\n' & '動作確認の上、本番トラフィックも新しいリビジョンのタスクに *再ルーティングするか* 、それとも *ロールバックするか* を選択してください。\\\\n' & '選択は *' & $string($timeoutInMinutes) & ' 分以内* に行う必要があります。期限を超過すると *自動でロールバック* が開始されます。\\\\n\\\\n' & '---\\\\n' & '動作補足 : \\\\n\\\\n' & 'POST_TEST_TRAFFIC_SHIFT の PAUSE ライフサイクルフックにより、本番トラフィック切り替え前にデプロイが一時停止されています。\\\\n' & 'ボタンをクリックすると \`aws ecs continue-service-deployment\` API が実行され、CONTINUE / ROLLBACK が指示されます。\\\\n' & '---\\\\n' & 'ref : \\\\n' & '- <https://docs.aws.amazon.com/ja_jp/AmazonECS/latest/developerguide/blue-green-deployment-how-it-works.html|Amazon ECS ブルー/グリーンサービスのデプロイワークフロー - Amazon Elastic Container Service>\\\\n' & '- <https://docs.aws.amazon.com/ja_jp/AmazonECS/latest/developerguide/pause-lifecycle-hooks.html|Amazon ECS デプロイの一時停止ライフサイクルフック - Amazon Elastic Container Service>'\\n      },\\n      \\"metadata\\": {\\n        \\"additionalContext\\": {\\n          \\"ActionGroup\\": \\"ecs-blue-green-deployment_POST_TEST_TRAFFIC_SHIFT\\",\\n          \\"hookId\\": $hookId,\\n          \\"region\\": $region\\n        },\\n        \\"enableCustomActions\\": true\\n      }\\n    }) %}"}},"Publish":{"QueryLanguage":"JSONata","End":true,"Retry":[{"ErrorEquals":["States.ALL"],"IntervalSeconds":2,"MaxAttempts":3,"BackoffRate":2}],"Type":"Task","Arguments":{"TopicArn":"",
+              {
+                "Ref": "DeploymentNotificationTopic64AF339C",
+              },
+              "","Message":"{% $snsMessage %}","Subject":"ECS Blue/Green Deployment - 本番トラフィックの再ルーティング"},"Resource":"arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":states:::sns:publish"}},"TimeoutSeconds":300}",
+            ],
+          ],
+        },
+        "RoleArn": {
+          "Fn::GetAtt": [
+            "DeploymentNotificationStateMachineRole7FB231F0",
+            "Arn",
+          ],
+        },
+        "StateMachineType": "STANDARD",
+        "TracingConfiguration": {
+          "Enabled": true,
+        },
+      },
+      "Type": "AWS::StepFunctions::StateMachine",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "DeploymentNotificationStateMachineEventsRoleA4F4DDC7": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "DeploymentNotificationStateMachineEventsRoleDefaultPolicy5656E04D": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "states:StartExecution",
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "DeploymentNotificationStateMachineD56B4C1F",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "DeploymentNotificationStateMachineEventsRoleDefaultPolicy5656E04D",
+        "Roles": [
+          {
+            "Ref": "DeploymentNotificationStateMachineEventsRoleA4F4DDC7",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "DeploymentNotificationStateMachineRole7FB231F0": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "states.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "DeploymentNotificationStateMachineRoleDefaultPolicy4D0CBE91": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "ecs:describeServiceDeployments",
+                "ecs:describeServices",
+                "xray:GetSamplingRules",
+                "xray:GetSamplingTargets",
+                "xray:PutTelemetryRecords",
+                "xray:PutTraceSegments",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "DeploymentNotificationTopic64AF339C",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "DeploymentNotificationStateMachineRoleDefaultPolicy4D0CBE91",
+        "Roles": [
+          {
+            "Ref": "DeploymentNotificationStateMachineRole7FB231F0",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "DeploymentNotificationTopic64AF339C": {
+      "Type": "AWS::SNS::Topic",
+    },
+    "EcsConstructCluster14AE103B": {
+      "Properties": {
+        "ClusterSettings": [
+          {
+            "Name": "containerInsights",
+            "Value": "enhanced",
+          },
+        ],
+        "Configuration": {
+          "ExecuteCommandConfiguration": {
+            "LogConfiguration": {
+              "S3BucketName": {
+                "Ref": "EcsConstructecsExecLogBucketConstruct76C260A9",
+              },
+              "S3EncryptionEnabled": true,
+            },
+            "Logging": "OVERRIDE",
+          },
+        },
+      },
+      "Type": "AWS::ECS::Cluster",
+    },
+    "EcsConstructOtelConfigED4FCA86": {
+      "Properties": {
+        "Name": "/ecs/EcsNativeBlueGreenStackEcsConstruct73F95450/otel-config",
+        "Type": "String",
+        "Value": "receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: "fluent-bit-metrics"
+          scrape_interval: 1m
+          scrape_timeout: 10s
+          static_configs:
+            - targets: ["127.0.0.1:2020"]
+          metrics_path: "/api/v2/metrics/prometheus"
+
+extensions:
+  sigv4auth:
+    region: \${AWS_REGION}
+    service: xray
+
+  awsproxy:
+    endpoint: 0.0.0.0:2000
+    service_name: xray
+    region: \${AWS_REGION}
+
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 100
+    spike_limit_mib: 25
+
+  filter/exclude_health:
+    traces:
+      span:
+        - 'attributes["http.route"] == "/health"'
+
+  filter/exclude_names:
+    metrics:
+      datapoint:
+        - 'attributes["name"] == "tcp.0"'
+        - 'attributes["name"] == "forward.2"'
+        - 'attributes["name"] == "re_emitted"'
+        - 'IsMatch(attributes["name"], "^null\\\\..*")'
+        - 'IsMatch(attributes["name"], "^emitter_for_multiline\\\\..*")'
+
+  resourcedetection:
+    detectors: [env, ecs]
+    timeout: 5s
+    override: false
+
+  resource:
+    attributes:
+      - key: aws.ecs.cluster.arn
+        pattern: "^arn:aws:ecs:[^:]+:[^:]+:cluster/(?P<ClusterName>[^/]+)$"
+        action: extract
+      - key: TaskId
+        from_attribute: aws.ecs.task.id
+        action: insert
+      - key: TaskDefinitionFamily
+        from_attribute: aws.ecs.task.family
+        action: insert
+      - key: aws.ecs.task.arn
+        action: delete
+      - key: aws.log.group.arns
+        action: delete
+      - key: aws.log.stream.arns
+        action: delete
+
+  metricstransform:
+    transforms:
+      - include: "^(.*)_total$"
+        match_type: regexp
+        action: update
+        new_name: "$\${1}"
+
+  batch:
+    timeout: 60s
+
+exporters:
+  otlphttp:
+    traces_endpoint: https://xray.\${AWS_REGION}.amazonaws.com/v1/traces
+    compression: gzip
+    auth:
+      authenticator: sigv4auth
+
+  awsemf/fluent_bit:
+    namespace: ECS/FluentBit
+    log_group_name: "/aws/ecs/containerinsights/{ClusterName}/prometheus"
+    log_stream_name: "/task/{TaskId}/fluent-bit"
+    log_retention: 14
+    resource_to_telemetry_conversion:
+      enabled: true
+    dimension_rollup_option: NoDimensionRollup
+    metric_declarations:
+      - dimensions:
+          - [ClusterName, TaskId, TaskDefinitionFamily, name]
+        metric_name_selectors:
+          - "^fluentbit_input_.*"
+          - "^fluentbit_output_.*"
+
+service:
+  extensions: [sigv4auth, awsproxy]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [filter/exclude_health, batch]
+      exporters: [otlphttp]
+
+    metrics/fluent_bit:
+      receivers: [prometheus]
+      processors:
+        [
+          memory_limiter,
+          filter/exclude_names,
+          resourcedetection,
+          resource,
+          metricstransform,
+          batch,
+        ]
+      exporters: [awsemf/fluent_bit]
+",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "EcsConstructServiceAlternateTargetRole6106E5D6": {
+      "DependsOn": [
+        "EcsConstructTaskDefinitionTaskRoleDefaultPolicy0C05A2A5",
+        "EcsConstructTaskDefinitionTaskRole16422972",
+      ],
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ecs.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/AmazonECSInfrastructureRolePolicyForLoadBalancers",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "EcsConstructServiceC04CE253": {
+      "DependsOn": [
+        "AlbConstructListener51963EA1",
+        "AlbConstructListenerRule8DC40070",
+        "EcsConstructTaskDefinitionTaskRoleDefaultPolicy0C05A2A5",
+        "EcsConstructTaskDefinitionTaskRole16422972",
+      ],
+      "Properties": {
+        "Cluster": {
+          "Ref": "EcsConstructCluster14AE103B",
+        },
+        "DeploymentConfiguration": {
+          "BakeTimeInMinutes": 1,
+          "DeploymentCircuitBreaker": {
+            "Enable": true,
+            "Rollback": true,
+          },
+          "LifecycleHooks": [
+            {
+              "LifecycleStages": [
+                "POST_TEST_TRAFFIC_SHIFT",
+              ],
+              "TargetType": "PAUSE",
+              "TimeoutConfiguration": {
+                "Action": "ROLLBACK",
+                "TimeoutInMinutes": 1440,
+              },
+            },
+          ],
+          "MaximumPercent": 200,
+          "MinimumHealthyPercent": 100,
+          "Strategy": "BLUE_GREEN",
+        },
+        "DesiredCount": 2,
+        "EnableECSManagedTags": false,
+        "EnableExecuteCommand": true,
+        "HealthCheckGracePeriodSeconds": 10,
+        "LaunchType": "FARGATE",
+        "LoadBalancers": [
+          {
+            "AdvancedConfiguration": {
+              "AlternateTargetGroupArn": {
+                "Ref": "AlbConstructTg2AFED7D09",
+              },
+              "ProductionListenerRule": {
+                "Ref": "AlbConstructListenerRule8DC40070",
+              },
+              "RoleArn": {
+                "Fn::GetAtt": [
+                  "EcsConstructServiceAlternateTargetRole6106E5D6",
+                  "Arn",
+                ],
+              },
+              "TestListenerRule": {
+                "Ref": "AlbConstructTestListenerRule172B8EC4",
+              },
+            },
+            "ContainerName": "web",
+            "ContainerPort": 80,
+            "TargetGroupArn": {
+              "Ref": "AlbConstructTg1B21A2889",
+            },
+          },
+        ],
+        "NetworkConfiguration": {
+          "AwsvpcConfiguration": {
+            "AssignPublicIp": "DISABLED",
+            "SecurityGroups": [
+              {
+                "Fn::GetAtt": [
+                  "EcsConstructServiceSecurityGroup9E2F9E78",
+                  "GroupId",
+                ],
+              },
+            ],
+            "Subnets": [
+              {
+                "Ref": "VpcConstructEgressSubnet1Subnet388F8479",
+              },
+              {
+                "Ref": "VpcConstructEgressSubnet2Subnet0D59FC0C",
+              },
+            ],
+          },
+        },
+        "TaskDefinition": {
+          "Ref": "EcsConstructTaskDefinition7D5C9834",
+        },
+      },
+      "Type": "AWS::ECS::Service",
+    },
+    "EcsConstructServiceSecurityGroup9E2F9E78": {
+      "DependsOn": [
+        "EcsConstructTaskDefinitionTaskRoleDefaultPolicy0C05A2A5",
+        "EcsConstructTaskDefinitionTaskRole16422972",
+      ],
+      "Properties": {
+        "GroupDescription": "EcsNativeBlueGreenStack/EcsConstruct/Service/SecurityGroup",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcConstructEA197461",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "EcsConstructServiceSecurityGroupfromEcsNativeBlueGreenStackAlbConstructSecurityGroup74F999DB80E8A7A3A6": {
+      "DependsOn": [
+        "EcsConstructTaskDefinitionTaskRoleDefaultPolicy0C05A2A5",
+        "EcsConstructTaskDefinitionTaskRole16422972",
+      ],
+      "Properties": {
+        "Description": "from EcsNativeBlueGreenStackAlbConstructSecurityGroup74F999DB:80",
+        "FromPort": 80,
+        "GroupId": {
+          "Fn::GetAtt": [
+            "EcsConstructServiceSecurityGroup9E2F9E78",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "AlbConstructSecurityGroup6F1A15B1",
+            "GroupId",
+          ],
+        },
+        "ToPort": 80,
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
+    },
+    "EcsConstructTaskDefinition7D5C9834": {
+      "Properties": {
+        "ContainerDefinitions": [
+          {
+            "Command": [
+              "cp",
+              "-r",
+              "/autoinstrumentation/.",
+              "/otel-auto-instrumentation/",
+            ],
+            "Essential": false,
+            "Image": "public.ecr.aws/aws-observability/adot-autoinstrumentation-node:v0.8.1",
+            "LogConfiguration": {
+              "LogDriver": "awslogs",
+              "Options": {
+                "awslogs-group": {
+                  "Ref": "EcsConstructTaskDefinitionAdotAutoInstrumentationInitContainerLogGroup8060A51D",
+                },
+                "awslogs-region": {
+                  "Ref": "AWS::Region",
+                },
+                "awslogs-stream-prefix": "init",
+              },
+            },
+            "MountPoints": [
+              {
+                "ContainerPath": "/otel-auto-instrumentation",
+                "ReadOnly": false,
+                "SourceVolume": "opentelemetry-auto-instrumentation",
+              },
+            ],
+            "Name": "init",
+          },
+          {
+            "DependsOn": [
+              {
+                "Condition": "HEALTHY",
+                "ContainerName": "app",
+              },
+            ],
+            "Essential": true,
+            "Image": {
+              "Fn::Sub": "\${AWS::AccountId}.dkr.ecr.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-container-assets-\${AWS::AccountId}-\${AWS::Region}:200699f60c45ad422736921992e650cae4ba225bfa90ae7eb4e8f6fc509b14cb",
+            },
+            "LinuxParameters": {
+              "Capabilities": {},
+              "InitProcessEnabled": true,
+            },
+            "LogConfiguration": {
+              "LogDriver": "awsfirelens",
+            },
+            "Name": "web",
+            "PortMappings": [
+              {
+                "ContainerPort": 80,
+                "Protocol": "tcp",
+              },
+            ],
+          },
+          {
+            "DependsOn": [
+              {
+                "Condition": "SUCCESS",
+                "ContainerName": "init",
+              },
+            ],
+            "Environment": [
+              {
+                "Name": "VALKEY_HOST",
+                "Value": {
+                  "Fn::GetAtt": [
+                    "ValkeyConstructServerlessCacheF65A85EA",
+                    "Endpoint.Address",
+                  ],
+                },
+              },
+              {
+                "Name": "VALKEY_PORT",
+                "Value": "6379",
+              },
+              {
+                "Name": "VALKEY_TLS",
+                "Value": "true",
+              },
+              {
+                "Name": "NODE_OPTIONS",
+                "Value": "--require /otel-auto-instrumentation/autoinstrumentation.js",
+              },
+              {
+                "Name": "OTEL_RESOURCE_ATTRIBUTES",
+                "Value": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "service.name=ecs-express-app,deployment.environment=ecs:",
+                      {
+                        "Ref": "EcsConstructCluster14AE103B",
+                      },
+                      ",aws.log.group.names=",
+                      {
+                        "Ref": "FirelensConstructFirelensLogGroupD186C82F",
+                      },
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "OTEL_EXPORTER_OTLP_PROTOCOL",
+                "Value": "http/protobuf",
+              },
+              {
+                "Name": "OTEL_EXPORTER_OTLP_ENDPOINT",
+                "Value": "http://localhost:4318",
+              },
+              {
+                "Name": "OTEL_TRACES_EXPORTER",
+                "Value": "otlp",
+              },
+              {
+                "Name": "OTEL_METRICS_EXPORTER",
+                "Value": "none",
+              },
+              {
+                "Name": "OTEL_LOGS_EXPORTER",
+                "Value": "none",
+              },
+              {
+                "Name": "OTEL_TRACES_SAMPLER",
+                "Value": "xray",
+              },
+              {
+                "Name": "OTEL_TRACES_SAMPLER_ARG",
+                "Value": "endpoint=http://localhost:2000,polling_interval=300",
+              },
+              {
+                "Name": "OTEL_PROPAGATORS",
+                "Value": "tracecontext,baggage,xray",
+              },
+              {
+                "Name": "OTEL_AWS_APPLICATION_SIGNALS_ENABLED",
+                "Value": "false",
+              },
+            ],
+            "Essential": true,
+            "HealthCheck": {
+              "Command": [
+                "CMD-SHELL",
+                "wget -q -O - http://localhost:3000/health || exit 1",
+              ],
+              "Interval": 10,
+              "Retries": 3,
+              "StartPeriod": 5,
+              "Timeout": 3,
+            },
+            "Image": {
+              "Fn::Sub": "\${AWS::AccountId}.dkr.ecr.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-container-assets-\${AWS::AccountId}-\${AWS::Region}:b72950aa3f32f82ea4841be077adde3ae3b0f9ab02cdd97dc3ef8f58be90bdde",
+            },
+            "LinuxParameters": {
+              "Capabilities": {},
+              "InitProcessEnabled": true,
+            },
+            "LogConfiguration": {
+              "LogDriver": "awsfirelens",
+            },
+            "MountPoints": [
+              {
+                "ContainerPath": "/otel-auto-instrumentation",
+                "ReadOnly": true,
+                "SourceVolume": "opentelemetry-auto-instrumentation",
+              },
+            ],
+            "Name": "app",
+            "Secrets": [
+              {
+                "Name": "DB_HOST",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "AuroraConstructClusterSecretAttachment1F98DBD4",
+                      },
+                      ":host::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "DB_PORT",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "AuroraConstructClusterSecretAttachment1F98DBD4",
+                      },
+                      ":port::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "DB_USERNAME",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "AuroraConstructClusterSecretAttachment1F98DBD4",
+                      },
+                      ":username::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "DB_PASSWORD",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "AuroraConstructClusterSecretAttachment1F98DBD4",
+                      },
+                      ":password::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "DB_NAME",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "AuroraConstructClusterSecretAttachment1F98DBD4",
+                      },
+                      ":dbname::",
+                    ],
+                  ],
+                },
+              },
+            ],
+          },
+          {
+            "Environment": [
+              {
+                "Name": "LOG_GROUP_NAME",
+                "Value": {
+                  "Ref": "FirelensConstructFirelensLogGroupD186C82F",
+                },
+              },
+              {
+                "Name": "FIREHOSE_DELIVERY_STREAM_NAME",
+                "Value": {
+                  "Ref": "FirelensConstructDeliveryStreamD9D925B3",
+                },
+              },
+              {
+                "Name": "aws_fluent_bit_init_s3_1",
+                "Value": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "FirelensConstructFireLensConfBucket0FDA45CF",
+                          "Arn",
+                        ],
+                      },
+                      "/extra.conf",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "aws_fluent_bit_init_s3_2",
+                "Value": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "FirelensConstructFireLensConfBucket0FDA45CF",
+                          "Arn",
+                        ],
+                      },
+                      "/parsers_custom.conf",
+                    ],
+                  ],
+                },
+              },
+            ],
+            "Essential": true,
+            "FirelensConfiguration": {
+              "Type": "fluentbit",
+            },
+            "Image": "public.ecr.aws/aws-observability/aws-for-fluent-bit:init-3.2.0",
+            "LogConfiguration": {
+              "LogDriver": "awslogs",
+              "Options": {
+                "awslogs-group": {
+                  "Ref": "EcsConstructTaskDefinitionlogRouterLogGroup27EC9B3C",
+                },
+                "awslogs-region": {
+                  "Ref": "AWS::Region",
+                },
+                "awslogs-stream-prefix": "firelens/EcsNativeBlueGreenStackEcsConstructTaskDefinitionF683F4B2",
+              },
+            },
+            "Name": "logRouter",
+          },
+          {
+            "DependsOn": [
+              {
+                "Condition": "START",
+                "ContainerName": "logRouter",
+              },
+            ],
+            "Environment": [
+              {
+                "Name": "AWS_REGION",
+                "Value": {
+                  "Ref": "AWS::Region",
+                },
+              },
+            ],
+            "Essential": false,
+            "Image": "public.ecr.aws/aws-observability/aws-otel-collector:v0.47.0",
+            "LogConfiguration": {
+              "LogDriver": "awslogs",
+              "Options": {
+                "awslogs-group": {
+                  "Ref": "EcsConstructTaskDefinitionAdotCollectorLogGroup49B64A95",
+                },
+                "awslogs-region": {
+                  "Ref": "AWS::Region",
+                },
+                "awslogs-stream-prefix": "adot-collector",
+              },
+            },
+            "Name": "adot-collector",
+            "Secrets": [
+              {
+                "Name": "AOT_CONFIG_CONTENT",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":ssm:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":parameter",
+                      {
+                        "Ref": "EcsConstructOtelConfigED4FCA86",
+                      },
+                    ],
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        "Cpu": "256",
+        "ExecutionRoleArn": {
+          "Fn::GetAtt": [
+            "EcsConstructTaskDefinitionExecutionRoleCFBB43FE",
+            "Arn",
+          ],
+        },
+        "Family": "EcsNativeBlueGreenStackEcsConstructTaskDefinitionF683F4B2",
+        "Memory": "512",
+        "NetworkMode": "awsvpc",
+        "RequiresCompatibilities": [
+          "FARGATE",
+        ],
+        "RuntimePlatform": {
+          "CpuArchitecture": "ARM64",
+          "OperatingSystemFamily": "LINUX",
+        },
+        "TaskRoleArn": {
+          "Fn::GetAtt": [
+            "EcsConstructTaskDefinitionTaskRole16422972",
+            "Arn",
+          ],
+        },
+        "Volumes": [
+          {
+            "Name": "opentelemetry-auto-instrumentation",
+          },
+        ],
+      },
+      "Type": "AWS::ECS::TaskDefinition",
+    },
+    "EcsConstructTaskDefinitionAdotAutoInstrumentationInitContainerLogGroup8060A51D": {
+      "DeletionPolicy": "Retain",
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "EcsConstructTaskDefinitionAdotCollectorLogGroup49B64A95": {
+      "DeletionPolicy": "Retain",
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "EcsConstructTaskDefinitionExecutionRoleCFBB43FE": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ecs-tasks.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "EcsConstructTaskDefinitionExecutionRoleDefaultPolicy68CD8F59": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "EcsConstructTaskDefinitionAdotAutoInstrumentationInitContainerLogGroup8060A51D",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::GetAtt": [
+                    "EcsConstructTaskDefinitionAdotCollectorLogGroup49B64A95",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::GetAtt": [
+                    "EcsConstructTaskDefinitionlogRouterLogGroup27EC9B3C",
+                    "Arn",
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "ecr:BatchCheckLayerAvailability",
+                "ecr:BatchGetImage",
+                "ecr:GetDownloadUrlForLayer",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":ecr:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":repository/",
+                    {
+                      "Fn::Sub": "cdk-hnb659fds-container-assets-\${AWS::AccountId}-\${AWS::Region}",
+                    },
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": "ecr:GetAuthorizationToken",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            {
+              "Action": [
+                "secretsmanager:DescribeSecret",
+                "secretsmanager:GetSecretValue",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "AuroraConstructClusterSecretAttachment1F98DBD4",
+              },
+            },
+            {
+              "Action": [
+                "ssm:DescribeParameters",
+                "ssm:GetParameter",
+                "ssm:GetParameterHistory",
+                "ssm:GetParameters",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":ssm:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter",
+                    {
+                      "Ref": "EcsConstructOtelConfigED4FCA86",
+                    },
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "EcsConstructTaskDefinitionExecutionRoleDefaultPolicy68CD8F59",
+        "Roles": [
+          {
+            "Ref": "EcsConstructTaskDefinitionExecutionRoleCFBB43FE",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "EcsConstructTaskDefinitionTaskRole16422972": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ecs-tasks.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/AWSXrayWriteOnlyAccess",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "EcsConstructTaskDefinitionTaskRoleDefaultPolicy0C05A2A5": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetBucket*",
+                "s3:GetObject*",
+                "s3:List*",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "FirelensConstructFireLensConfBucket0FDA45CF",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "FirelensConstructFireLensConfBucket0FDA45CF",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "firehose:PutRecord",
+                "firehose:PutRecordBatch",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "FirelensConstructDeliveryStreamD9D925B3",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "FirelensConstructFirelensLogGroupD186C82F",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:DescribeLogGroups",
+                "logs:DescribeLogStreams",
+                "logs:PutLogEvents",
+                "logs:PutRetentionPolicy",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":logs:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":log-group:/aws/ecs/containerinsights/",
+                    {
+                      "Ref": "EcsConstructCluster14AE103B",
+                    },
+                    "/prometheus:*",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "ecs:DescribeTasks",
+                "s3:GetBucketLocation",
+                "ssmmessages:CreateControlChannel",
+                "ssmmessages:CreateDataChannel",
+                "ssmmessages:OpenControlChannel",
+                "ssmmessages:OpenDataChannel",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            {
+              "Action": [
+                "s3:Abort*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "EcsConstructecsExecLogBucketConstruct76C260A9",
+                        "Arn",
+                      ],
+                    },
+                    "/*",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": "s3:PutObject",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":s3:::",
+                    {
+                      "Ref": "EcsConstructecsExecLogBucketConstruct76C260A9",
+                    },
+                    "/*",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": "s3:GetEncryptionConfiguration",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":s3:::",
+                    {
+                      "Ref": "EcsConstructecsExecLogBucketConstruct76C260A9",
+                    },
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "EcsConstructTaskDefinitionTaskRoleDefaultPolicy0C05A2A5",
+        "Roles": [
+          {
+            "Ref": "EcsConstructTaskDefinitionTaskRole16422972",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "EcsConstructTaskDefinitionlogRouterLogGroup27EC9B3C": {
+      "DeletionPolicy": "Retain",
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "EcsConstructecsExecLogBucketConstruct76C260A9": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256",
+              },
+            },
+          ],
+        },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true,
+        },
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "EcsConstructecsExecLogBucketConstructPolicyA286D1B2": {
+      "Properties": {
+        "Bucket": {
+          "Ref": "EcsConstructecsExecLogBucketConstruct76C260A9",
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:*",
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "EcsConstructecsExecLogBucketConstruct76C260A9",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "EcsConstructecsExecLogBucketConstruct76C260A9",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::S3::BucketPolicy",
+    },
+    "EcsNativeBlueGreenStackAuroraConstructClusterSecret09BAD1973fdaad7efa858a3daf9490cf0a702aeb": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "Description": {
+          "Fn::Join": [
+            "",
+            [
+              "Generated by the CDK for stack: ",
+              {
+                "Ref": "AWS::StackName",
+              },
+            ],
+          ],
+        },
+        "GenerateSecretString": {
+          "ExcludeCharacters": " %+~\`#$&*()|[]{}:;<>?!'/@"\\",
+          "GenerateStringKey": "password",
+          "PasswordLength": 30,
+          "SecretStringTemplate": "{"username":"clusteradmin"}",
+        },
+        "Name": "/EcsNativeBlueGreenStackAuroraConstruct05A31A1C/rds/credentials",
+      },
+      "Type": "AWS::SecretsManager::Secret",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "FirelensConstructDeliveryStreamD9D925B3": {
+      "DependsOn": [
+        "FirelensConstructDeliveryStreamS3DestinationRoleDefaultPolicyB869186A",
+      ],
+      "Properties": {
+        "DeliveryStreamType": "DirectPut",
+        "ExtendedS3DestinationConfiguration": {
+          "BucketARN": {
+            "Fn::GetAtt": [
+              "FirelensConstructFireLensLongBucketE9569ADD",
+              "Arn",
+            ],
+          },
+          "BufferingHints": {
+            "IntervalInSeconds": 300,
+            "SizeInMBs": 128,
+          },
+          "CloudWatchLoggingOptions": {
+            "Enabled": true,
+            "LogGroupName": {
+              "Ref": "FirelensConstructDeliveryStreamLogGroup94BD7B26",
+            },
+            "LogStreamName": {
+              "Ref": "FirelensConstructDeliveryStreamLogGroupS3Destination610C77C5",
+            },
+          },
+          "CompressionFormat": "GZIP",
+          "DynamicPartitioningConfiguration": {
+            "Enabled": true,
+          },
+          "ErrorOutputPrefix": "error/!{firehose:error-output-type}/!{timestamp:yyyy/MM/dd/HH/}",
+          "Prefix": "ecs/!{partitionKeyFromQuery:ecs_cluster}/!{partitionKeyFromQuery:container_name}/!{partitionKeyFromQuery:source}/!{timestamp:yyyy/MM/dd/HH/}",
+          "ProcessingConfiguration": {
+            "Enabled": true,
+            "Processors": [
+              {
+                "Parameters": [
+                  {
+                    "ParameterName": "MetadataExtractionQuery",
+                    "ParameterValue": "{ecs_cluster: .ecs_cluster, container_name: .container_name, source : .source}",
+                  },
+                  {
+                    "ParameterName": "JsonParsingEngine",
+                    "ParameterValue": "JQ-1.6",
+                  },
+                ],
+                "Type": "MetadataExtraction",
+              },
+            ],
+          },
+          "RoleARN": {
+            "Fn::GetAtt": [
+              "FirelensConstructDeliveryStreamS3DestinationRoleC360CE45",
+              "Arn",
+            ],
+          },
+        },
+      },
+      "Type": "AWS::KinesisFirehose::DeliveryStream",
+    },
+    "FirelensConstructDeliveryStreamLogGroup94BD7B26": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "RetentionInDays": 731,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "FirelensConstructDeliveryStreamLogGroupS3Destination610C77C5": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "LogGroupName": {
+          "Ref": "FirelensConstructDeliveryStreamLogGroup94BD7B26",
+        },
+      },
+      "Type": "AWS::Logs::LogStream",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "FirelensConstructDeliveryStreamS3DestinationRoleC360CE45": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "firehose.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "FirelensConstructDeliveryStreamS3DestinationRoleDefaultPolicyB869186A": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:Abort*",
+                "s3:DeleteObject*",
+                "s3:GetBucket*",
+                "s3:GetObject*",
+                "s3:List*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "FirelensConstructFireLensLongBucketE9569ADD",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "FirelensConstructFireLensLongBucketE9569ADD",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "FirelensConstructDeliveryStreamLogGroup94BD7B26",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "FirelensConstructDeliveryStreamS3DestinationRoleDefaultPolicyB869186A",
+        "Roles": [
+          {
+            "Ref": "FirelensConstructDeliveryStreamS3DestinationRoleC360CE45",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "FirelensConstructFireLensConfBucket0FDA45CF": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256",
+              },
+            },
+          ],
+        },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true,
+        },
+        "Tags": [
+          {
+            "Key": "aws-cdk:auto-delete-objects",
+            "Value": "true",
+          },
+          {
+            "Key": "aws-cdk:cr-owned:1764295b",
+            "Value": "true",
+          },
+        ],
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "FirelensConstructFireLensConfBucketAutoDeleteObjectsCustomResource5E115313": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "FirelensConstructFireLensConfBucketPolicyF0D88263",
+      ],
+      "Properties": {
+        "BucketName": {
+          "Ref": "FirelensConstructFireLensConfBucket0FDA45CF",
+        },
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::S3AutoDeleteObjects",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "FirelensConstructFireLensConfBucketPolicyF0D88263": {
+      "Properties": {
+        "Bucket": {
+          "Ref": "FirelensConstructFireLensConfBucket0FDA45CF",
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:*",
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "FirelensConstructFireLensConfBucket0FDA45CF",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "FirelensConstructFireLensConfBucket0FDA45CF",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "s3:DeleteObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:PutBucketPolicy",
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::GetAtt": [
+                    "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+                    "Arn",
+                  ],
+                },
+              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "FirelensConstructFireLensConfBucket0FDA45CF",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "FirelensConstructFireLensConfBucket0FDA45CF",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::S3::BucketPolicy",
+    },
+    "FirelensConstructFireLensConfDeploymentAwsCliLayerC999920F": {
+      "Properties": {
+        "Content": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "c49d356cac773d491c5f7ac148995a1181498a8e289429f8612a7f7e3814f535.zip",
+        },
+        "Description": "/opt/awscli/aws",
+      },
+      "Type": "AWS::Lambda::LayerVersion",
+    },
+    "FirelensConstructFireLensConfDeploymentCustomResourceB3025B98": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "DestinationBucketName": {
+          "Ref": "FirelensConstructFireLensConfBucket0FDA45CF",
+        },
+        "OutputObjectKeys": true,
+        "Prune": true,
+        "RetainOnDelete": false,
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C81C01536",
+            "Arn",
+          ],
+        },
+        "SourceBucketNames": [
+          {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+        ],
+        "SourceObjectKeys": [
+          "24cfa236b9009d039e69225eb8c877fe937752383f8065f430864b20eccc2908.zip",
+        ],
+        "WaitForDistributionInvalidation": true,
+      },
+      "Type": "Custom::CDKBucketDeployment",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "FirelensConstructFireLensLongBucketAutoDeleteObjectsCustomResource9B56FCF3": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "FirelensConstructFireLensLongBucketPolicy7F81A234",
+      ],
+      "Properties": {
+        "BucketName": {
+          "Ref": "FirelensConstructFireLensLongBucketE9569ADD",
+        },
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::S3AutoDeleteObjects",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "FirelensConstructFireLensLongBucketE9569ADD": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256",
+              },
+            },
+          ],
+        },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true,
+        },
+        "Tags": [
+          {
+            "Key": "aws-cdk:auto-delete-objects",
+            "Value": "true",
+          },
+        ],
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "FirelensConstructFireLensLongBucketPolicy7F81A234": {
+      "Properties": {
+        "Bucket": {
+          "Ref": "FirelensConstructFireLensLongBucketE9569ADD",
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:*",
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "FirelensConstructFireLensLongBucketE9569ADD",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "FirelensConstructFireLensLongBucketE9569ADD",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "s3:DeleteObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:PutBucketPolicy",
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::GetAtt": [
+                    "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+                    "Arn",
+                  ],
+                },
+              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "FirelensConstructFireLensLongBucketE9569ADD",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "FirelensConstructFireLensLongBucketE9569ADD",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::S3::BucketPolicy",
+    },
+    "FirelensConstructFirelensLogGroupD186C82F": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "RetentionInDays": 731,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "QDeveloperChatChatbotGuardrailPolicyEC73C602": {
+      "Properties": {
+        "Description": "",
+        "Path": "/",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "ecs:ContinueServiceDeployment",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::ManagedPolicy",
+    },
+    "QDeveloperChatChatbotRole72EEA6B6": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "chatbot.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "QDeveloperChatChatbotRoleDefaultPolicy48B68129": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "ecs:ContinueServiceDeployment",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "QDeveloperChatChatbotRoleDefaultPolicy48B68129",
+        "Roles": [
+          {
+            "Ref": "QDeveloperChatChatbotRole72EEA6B6",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "QDeveloperChatPostTestTrafficShiftApproveAction7797E540": {
+      "Properties": {
+        "ActionName": "PostTestTrafficShiftApprove",
+        "AliasName": "post-test-traffic-approve",
+        "Attachments": [
+          {
+            "ButtonText": "🔁 再ルーティング",
+            "Criteria": [
+              {
+                "Operator": "HAS_VALUE",
+                "VariableName": "hookId",
+              },
+              {
+                "Operator": "EQUALS",
+                "Value": "ecs-blue-green-deployment_POST_TEST_TRAFFIC_SHIFT",
+                "VariableName": "ActionGroup",
+              },
+            ],
+            "NotificationType": "Custom",
+            "Variables": {
+              "ActionGroup": "event.metadata.additionalContext.ActionGroup",
+              "hookId": "event.metadata.additionalContext.hookId",
+              "region": "event.metadata.additionalContext.region",
+            },
+          },
+        ],
+        "Definition": {
+          "CommandText": "ecs continue-service-deployment --hook-id $hookId --action CONTINUE --region $region",
+        },
+      },
+      "Type": "AWS::Chatbot::CustomAction",
+    },
+    "QDeveloperChatPostTestTrafficShiftRejectAction09644B58": {
+      "Properties": {
+        "ActionName": "PostTestTrafficShiftReject",
+        "AliasName": "post-test-traffic-reject",
+        "Attachments": [
+          {
+            "ButtonText": "⏪ ロールバック",
+            "Criteria": [
+              {
+                "Operator": "HAS_VALUE",
+                "VariableName": "hookId",
+              },
+              {
+                "Operator": "EQUALS",
+                "Value": "ecs-blue-green-deployment_POST_TEST_TRAFFIC_SHIFT",
+                "VariableName": "ActionGroup",
+              },
+            ],
+            "NotificationType": "Custom",
+            "Variables": {
+              "ActionGroup": "event.metadata.additionalContext.ActionGroup",
+              "hookId": "event.metadata.additionalContext.hookId",
+              "region": "event.metadata.additionalContext.region",
+            },
+          },
+        ],
+        "Definition": {
+          "CommandText": "ecs continue-service-deployment --hook-id $hookId --action ROLLBACK --region $region",
+        },
+      },
+      "Type": "AWS::Chatbot::CustomAction",
+    },
+    "QDeveloperChatSlackChannelA78F2523": {
+      "Properties": {
+        "ConfigurationName": "ecs-blue-green-deployment",
+        "CustomizationResourceArns": [
+          {
+            "Ref": "QDeveloperChatPostTestTrafficShiftApproveAction7797E540",
+          },
+          {
+            "Ref": "QDeveloperChatPostTestTrafficShiftRejectAction09644B58",
+          },
+        ],
+        "GuardrailPolicies": [
+          {
+            "Ref": "QDeveloperChatChatbotGuardrailPolicyEC73C602",
+          },
+        ],
+        "IamRoleArn": {
+          "Fn::GetAtt": [
+            "QDeveloperChatChatbotRole72EEA6B6",
+            "Arn",
+          ],
+        },
+        "LoggingLevel": "INFO",
+        "SlackChannelId": "C0A76LPE6FL",
+        "SlackWorkspaceId": "T0A74KE0G78",
+        "SnsTopicArns": [
+          {
+            "Ref": "DeploymentNotificationTopic64AF339C",
+          },
+        ],
+        "UserRoleRequired": false,
+      },
+      "Type": "AWS::Chatbot::SlackChannelConfiguration",
+    },
+    "ValkeyConstructSecurityGroup06A936DB": {
+      "Properties": {
+        "GroupDescription": "Security group for ElastiCache Valkey Serverless",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "255.255.255.255/32",
+            "Description": "Disallow all traffic",
+            "FromPort": 252,
+            "IpProtocol": "icmp",
+            "ToPort": 86,
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcConstructEA197461",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "ValkeyConstructSecurityGroupfromEcsNativeBlueGreenStackEcsConstructServiceSecurityGroup5943E80A6379EF5D5C07": {
+      "Properties": {
+        "Description": "Allow ECS to Valkey",
+        "FromPort": 6379,
+        "GroupId": {
+          "Fn::GetAtt": [
+            "ValkeyConstructSecurityGroup06A936DB",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "EcsConstructServiceSecurityGroup9E2F9E78",
+            "GroupId",
+          ],
+        },
+        "ToPort": 6379,
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
+    },
+    "ValkeyConstructServerlessCacheF65A85EA": {
+      "Properties": {
+        "CacheUsageLimits": {
+          "DataStorage": {
+            "Maximum": 1,
+            "Unit": "GB",
+          },
+          "ECPUPerSecond": {
+            "Maximum": 1000,
+          },
+        },
+        "Engine": "valkey",
+        "MajorEngineVersion": "8",
+        "SecurityGroupIds": [
+          {
+            "Fn::GetAtt": [
+              "ValkeyConstructSecurityGroup06A936DB",
+              "GroupId",
+            ],
+          },
+        ],
+        "ServerlessCacheName": "ecsnativebluegreenstackvalkeyc-valkey",
+        "SubnetIds": [
+          {
+            "Ref": "VpcConstructIsolatedSubnet1SubnetA4D14A84",
+          },
+          {
+            "Ref": "VpcConstructIsolatedSubnet2Subnet9E0818DE",
+          },
+        ],
+      },
+      "Type": "AWS::ElastiCache::ServerlessCache",
+    },
+    "VpcConstructEA197461": {
+      "Properties": {
+        "CidrBlock": "10.10.8.0/22",
+        "EnableDnsHostnames": true,
+        "EnableDnsSupport": true,
+        "InstanceTenancy": "default",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "EcsNativeBlueGreenStack/VpcConstruct/Default",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::VPC",
+    },
+    "VpcConstructEgressSubnet1DefaultRoute5496255B": {
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "NatGatewayId": {
+          "Ref": "VpcConstructPublicSubnet1NATGateway9C2D8C0E",
+        },
+        "RouteTableId": {
+          "Ref": "VpcConstructEgressSubnet1RouteTable6DC51970",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "VpcConstructEgressSubnet1RouteTable6DC51970": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "EcsNativeBlueGreenStack/VpcConstruct/Default/EgressSubnet1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcConstructEA197461",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "VpcConstructEgressSubnet1RouteTableAssociationEE3E0D45": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "VpcConstructEgressSubnet1RouteTable6DC51970",
+        },
+        "SubnetId": {
+          "Ref": "VpcConstructEgressSubnet1Subnet388F8479",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "VpcConstructEgressSubnet1Subnet388F8479": {
+      "Properties": {
+        "AvailabilityZone": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::GetAZs": "",
+            },
+          ],
+        },
+        "CidrBlock": "10.10.8.64/27",
+        "MapPublicIpOnLaunch": false,
+        "Tags": [
+          {
+            "Key": "aws-cdk:subnet-name",
+            "Value": "Egress",
+          },
+          {
+            "Key": "aws-cdk:subnet-type",
+            "Value": "Private",
+          },
+          {
+            "Key": "Name",
+            "Value": "EcsNativeBlueGreenStack/VpcConstruct/Default/EgressSubnet1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcConstructEA197461",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "VpcConstructEgressSubnet2DefaultRouteDA637B58": {
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "NatGatewayId": {
+          "Ref": "VpcConstructPublicSubnet1NATGateway9C2D8C0E",
+        },
+        "RouteTableId": {
+          "Ref": "VpcConstructEgressSubnet2RouteTableBB6485EB",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "VpcConstructEgressSubnet2RouteTableAssociation1E6180B7": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "VpcConstructEgressSubnet2RouteTableBB6485EB",
+        },
+        "SubnetId": {
+          "Ref": "VpcConstructEgressSubnet2Subnet0D59FC0C",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "VpcConstructEgressSubnet2RouteTableBB6485EB": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "EcsNativeBlueGreenStack/VpcConstruct/Default/EgressSubnet2",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcConstructEA197461",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "VpcConstructEgressSubnet2Subnet0D59FC0C": {
+      "Properties": {
+        "AvailabilityZone": {
+          "Fn::Select": [
+            1,
+            {
+              "Fn::GetAZs": "",
+            },
+          ],
+        },
+        "CidrBlock": "10.10.8.96/27",
+        "MapPublicIpOnLaunch": false,
+        "Tags": [
+          {
+            "Key": "aws-cdk:subnet-name",
+            "Value": "Egress",
+          },
+          {
+            "Key": "aws-cdk:subnet-type",
+            "Value": "Private",
+          },
+          {
+            "Key": "Name",
+            "Value": "EcsNativeBlueGreenStack/VpcConstruct/Default/EgressSubnet2",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcConstructEA197461",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "VpcConstructIGWA7F24873": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "EcsNativeBlueGreenStack/VpcConstruct/Default",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::InternetGateway",
+    },
+    "VpcConstructIsolatedSubnet1RouteTable10A448BB": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "EcsNativeBlueGreenStack/VpcConstruct/Default/IsolatedSubnet1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcConstructEA197461",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "VpcConstructIsolatedSubnet1RouteTableAssociation315DE7BA": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "VpcConstructIsolatedSubnet1RouteTable10A448BB",
+        },
+        "SubnetId": {
+          "Ref": "VpcConstructIsolatedSubnet1SubnetA4D14A84",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "VpcConstructIsolatedSubnet1SubnetA4D14A84": {
+      "Properties": {
+        "AvailabilityZone": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::GetAZs": "",
+            },
+          ],
+        },
+        "CidrBlock": "10.10.8.128/27",
+        "MapPublicIpOnLaunch": false,
+        "Tags": [
+          {
+            "Key": "aws-cdk:subnet-name",
+            "Value": "Isolated",
+          },
+          {
+            "Key": "aws-cdk:subnet-type",
+            "Value": "Isolated",
+          },
+          {
+            "Key": "Name",
+            "Value": "EcsNativeBlueGreenStack/VpcConstruct/Default/IsolatedSubnet1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcConstructEA197461",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "VpcConstructIsolatedSubnet2RouteTable0C610CF5": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "EcsNativeBlueGreenStack/VpcConstruct/Default/IsolatedSubnet2",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcConstructEA197461",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "VpcConstructIsolatedSubnet2RouteTableAssociation394B080E": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "VpcConstructIsolatedSubnet2RouteTable0C610CF5",
+        },
+        "SubnetId": {
+          "Ref": "VpcConstructIsolatedSubnet2Subnet9E0818DE",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "VpcConstructIsolatedSubnet2Subnet9E0818DE": {
+      "Properties": {
+        "AvailabilityZone": {
+          "Fn::Select": [
+            1,
+            {
+              "Fn::GetAZs": "",
+            },
+          ],
+        },
+        "CidrBlock": "10.10.8.160/27",
+        "MapPublicIpOnLaunch": false,
+        "Tags": [
+          {
+            "Key": "aws-cdk:subnet-name",
+            "Value": "Isolated",
+          },
+          {
+            "Key": "aws-cdk:subnet-type",
+            "Value": "Isolated",
+          },
+          {
+            "Key": "Name",
+            "Value": "EcsNativeBlueGreenStack/VpcConstruct/Default/IsolatedSubnet2",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcConstructEA197461",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "VpcConstructPublicSubnet1DefaultRouteA69991A8": {
+      "DependsOn": [
+        "VpcConstructVPCGW3275E33B",
+      ],
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "VpcConstructIGWA7F24873",
+        },
+        "RouteTableId": {
+          "Ref": "VpcConstructPublicSubnet1RouteTable7EB81FDB",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "VpcConstructPublicSubnet1EIPD8D202CC": {
+      "Properties": {
+        "Domain": "vpc",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "EcsNativeBlueGreenStack/VpcConstruct/Default/PublicSubnet1",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::EIP",
+    },
+    "VpcConstructPublicSubnet1NATGateway9C2D8C0E": {
+      "DependsOn": [
+        "VpcConstructPublicSubnet1DefaultRouteA69991A8",
+        "VpcConstructPublicSubnet1RouteTableAssociation0560873B",
+      ],
+      "Properties": {
+        "AllocationId": {
+          "Fn::GetAtt": [
+            "VpcConstructPublicSubnet1EIPD8D202CC",
+            "AllocationId",
+          ],
+        },
+        "SubnetId": {
+          "Ref": "VpcConstructPublicSubnet1Subnet3C67D61F",
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "EcsNativeBlueGreenStack/VpcConstruct/Default/PublicSubnet1",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::NatGateway",
+    },
+    "VpcConstructPublicSubnet1RouteTable7EB81FDB": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "EcsNativeBlueGreenStack/VpcConstruct/Default/PublicSubnet1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcConstructEA197461",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "VpcConstructPublicSubnet1RouteTableAssociation0560873B": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "VpcConstructPublicSubnet1RouteTable7EB81FDB",
+        },
+        "SubnetId": {
+          "Ref": "VpcConstructPublicSubnet1Subnet3C67D61F",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "VpcConstructPublicSubnet1Subnet3C67D61F": {
+      "Properties": {
+        "AvailabilityZone": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::GetAZs": "",
+            },
+          ],
+        },
+        "CidrBlock": "10.10.8.0/27",
+        "MapPublicIpOnLaunch": false,
+        "Tags": [
+          {
+            "Key": "aws-cdk:subnet-name",
+            "Value": "Public",
+          },
+          {
+            "Key": "aws-cdk:subnet-type",
+            "Value": "Public",
+          },
+          {
+            "Key": "Name",
+            "Value": "EcsNativeBlueGreenStack/VpcConstruct/Default/PublicSubnet1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcConstructEA197461",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "VpcConstructPublicSubnet2DefaultRoute1723E0EA": {
+      "DependsOn": [
+        "VpcConstructVPCGW3275E33B",
+      ],
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "VpcConstructIGWA7F24873",
+        },
+        "RouteTableId": {
+          "Ref": "VpcConstructPublicSubnet2RouteTable08D60D42",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "VpcConstructPublicSubnet2RouteTable08D60D42": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "EcsNativeBlueGreenStack/VpcConstruct/Default/PublicSubnet2",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcConstructEA197461",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "VpcConstructPublicSubnet2RouteTableAssociation33B277B8": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "VpcConstructPublicSubnet2RouteTable08D60D42",
+        },
+        "SubnetId": {
+          "Ref": "VpcConstructPublicSubnet2SubnetECF28079",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "VpcConstructPublicSubnet2SubnetECF28079": {
+      "Properties": {
+        "AvailabilityZone": {
+          "Fn::Select": [
+            1,
+            {
+              "Fn::GetAZs": "",
+            },
+          ],
+        },
+        "CidrBlock": "10.10.8.32/27",
+        "MapPublicIpOnLaunch": false,
+        "Tags": [
+          {
+            "Key": "aws-cdk:subnet-name",
+            "Value": "Public",
+          },
+          {
+            "Key": "aws-cdk:subnet-type",
+            "Value": "Public",
+          },
+          {
+            "Key": "Name",
+            "Value": "EcsNativeBlueGreenStack/VpcConstruct/Default/PublicSubnet2",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcConstructEA197461",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "VpcConstructRestrictDefaultSecurityGroupCustomResourceB92F8C4F": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "Account": {
+          "Ref": "AWS::AccountId",
+        },
+        "DefaultSecurityGroupId": {
+          "Fn::GetAtt": [
+            "VpcConstructEA197461",
+            "DefaultSecurityGroup",
+          ],
+        },
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomVpcRestrictDefaultSGCustomResourceProviderHandlerDC833E5E",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::VpcRestrictDefaultSG",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "VpcConstructS362E23E24": {
+      "Properties": {
+        "RouteTableIds": [
+          {
+            "Ref": "VpcConstructEgressSubnet1RouteTable6DC51970",
+          },
+          {
+            "Ref": "VpcConstructEgressSubnet2RouteTableBB6485EB",
+          },
+          {
+            "Ref": "VpcConstructPublicSubnet1RouteTable7EB81FDB",
+          },
+          {
+            "Ref": "VpcConstructPublicSubnet2RouteTable08D60D42",
+          },
+          {
+            "Ref": "VpcConstructIsolatedSubnet1RouteTable10A448BB",
+          },
+          {
+            "Ref": "VpcConstructIsolatedSubnet2RouteTable0C610CF5",
+          },
+        ],
+        "ServiceName": {
+          "Fn::Join": [
+            "",
+            [
+              "com.amazonaws.",
+              {
+                "Ref": "AWS::Region",
+              },
+              ".s3",
+            ],
+          ],
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "EcsNativeBlueGreenStack/VpcConstruct/Default",
+          },
+        ],
+        "VpcEndpointType": "Gateway",
+        "VpcId": {
+          "Ref": "VpcConstructEA197461",
+        },
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
+    },
+    "VpcConstructVPCGW3275E33B": {
+      "Properties": {
+        "InternetGatewayId": {
+          "Ref": "VpcConstructIGWA7F24873",
+        },
+        "VpcId": {
+          "Ref": "VpcConstructEA197461",
+        },
+      },
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+    },
+  },
+  "Rules": {
+    "CheckBootstrapVersion": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Contains": [
+                  [
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5",
+                  ],
+                  {
+                    "Ref": "BootstrapVersion",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI.",
+        },
+      ],
+    },
+  },
+}
+`;

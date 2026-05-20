@@ -255,6 +255,75 @@ router.get("/sleep", async (req: Request, res: Response) => {
   });
 });
 
+// ランダムレイテンシーエンドポイント (SLOテスト用)
+router.get("/latency-test", async (req: Request, res: Response) => {
+  const MAX_LATENCY_MS = 5000;
+  const VALID_PROFILES = ["longtail", "normal", "bimodal"] as const;
+  type Profile = (typeof VALID_PROFILES)[number];
+
+  const rawProfile = req.query.profile;
+  const profile: Profile =
+    typeof rawProfile === "string" &&
+    VALID_PROFILES.includes(rawProfile as Profile)
+      ? (rawProfile as Profile)
+      : "longtail";
+
+  // Box-Muller変換で正規分布乱数を生成
+  const normalRandom = (mean: number, stddev: number): number => {
+    const u1 = Math.random();
+    const u2 = Math.random();
+    const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    return mean + z * stddev;
+  };
+
+  // 範囲内の一様乱数を生成
+  const uniformRandom = (min: number, max: number): number =>
+    min + Math.random() * (max - min);
+
+  let latencyMs: number;
+
+  switch (profile) {
+    case "longtail": {
+      // 90%: 30-80ms, 9%: 200-500ms, 1%: 1000-3000ms
+      const roll = Math.random();
+      if (roll < 0.9) {
+        latencyMs = uniformRandom(30, 80);
+      } else if (roll < 0.99) {
+        latencyMs = uniformRandom(200, 500);
+      } else {
+        latencyMs = uniformRandom(1000, 3000);
+      }
+      break;
+    }
+    case "normal": {
+      // 平均100ms, 標準偏差30ms
+      latencyMs = normalRandom(100, 30);
+      break;
+    }
+    case "bimodal": {
+      // 70%: 40-60ms (キャッシュヒット), 30%: 300-600ms (キャッシュミス)
+      latencyMs =
+        Math.random() < 0.7 ? uniformRandom(40, 60) : uniformRandom(300, 600);
+      break;
+    }
+  }
+
+  // 0ms未満にならないようクランプし、上限を適用
+  latencyMs = Math.max(0, Math.min(latencyMs, MAX_LATENCY_MS));
+  const actualLatencyMs = Math.round(latencyMs);
+
+  req.log.info({ profile, actualLatencyMs }, "Latency test endpoint called");
+
+  await new Promise((resolve) => setTimeout(resolve, actualLatencyMs));
+
+  res.status(200).json({
+    message: "Latency test completed",
+    profile,
+    actualLatencyMs,
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // エラーテスト用エンドポイント
 router.get("/error", (req: Request, res: Response) => {
   req.log.error("Intentional error endpoint triggered");
